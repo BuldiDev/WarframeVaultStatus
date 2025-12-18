@@ -89,7 +89,6 @@
         let youtubePlayer = null;
         let isMuted = localStorage.getItem('musicMuted') === 'true' || false;
         let isExpanded = localStorage.getItem('musicExpanded') === 'true' || false;
-        let shouldAutoplay = localStorage.getItem('musicAutoplay') !== 'false'; // Default true se non salvato
         let isPlaying = false; // Parte da false, poi diventa true quando inizia
 
         // YouTube API ready callback
@@ -145,13 +144,9 @@
                 `;
             }
             
-            // Aspetta che la thumbnail sia caricata, poi avvia se autoplay era attivo
+            // Aspetta che la thumbnail sia caricata, poi avvia sempre automaticamente
             setTimeout(() => {
-                console.log('shouldAutoplay:', shouldAutoplay);
-                if (shouldAutoplay) {
-                    console.log('Avvio autoplay del video');
-                    event.target.playVideo();
-                }
+                event.target.playVideo();
             }, 1000);
         }
 
@@ -187,13 +182,9 @@
                 // Se il video sta suonando (1) o è in buffering (3), metti in pausa
                 if (currentState === 1 || currentState === 3) {
                     youtubePlayer.pauseVideo();
-                    shouldAutoplay = false;
-                    localStorage.setItem('musicAutoplay', 'false');
                 } else {
                     // Altrimenti avvia il video
                     youtubePlayer.playVideo();
-                    shouldAutoplay = true;
-                    localStorage.setItem('musicAutoplay', 'true');
                 }
                 // L'icona verrà aggiornata automaticamente da onPlayerStateChange
             }
