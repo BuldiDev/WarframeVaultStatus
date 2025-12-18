@@ -22,6 +22,55 @@ export function init3DScene() {
     
     camera.position.z = 10;
     
+    // Create circular texture for particles
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    const circleTexture = new THREE.CanvasTexture(canvas);
+    
+    // Background particles - dust effect
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particlesCount = 1200;
+    const posArray = new Float32Array(particlesCount * 3);
+    const colorArray = new Float32Array(particlesCount * 3);
+    
+    for (let i = 0; i < particlesCount * 3; i += 3) {
+        // Position - più concentrate vicino alla camera
+        posArray[i] = (Math.random() - 0.5) * 40;
+        posArray[i + 1] = (Math.random() - 0.5) * 40;
+        posArray[i + 2] = (Math.random() - 0.5) * 40;
+        
+        // Gradiente più scuro - da grigio scuro a grigio chiaro
+        const grayValue = 0.3 + Math.random() * 0.5; // da grigio scuro a chiaro
+        colorArray[i] = grayValue;
+        colorArray[i + 1] = grayValue;
+        colorArray[i + 2] = grayValue;
+    }
+    
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+    
+    const particlesMaterial = new THREE.PointsMaterial({
+        size: 0.2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        sizeAttenuation: true,
+        map: circleTexture,
+        alphaTest: 0.01,
+        depthWrite: false
+    });
+    
+    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particlesMesh);
+    
     // Load logo
     const loader = new GLTFLoader();
     let logo;
@@ -56,10 +105,18 @@ export function init3DScene() {
         requestAnimationFrame(animate);
         
         if (logo) {
-            logo.rotation.y += 0.003;
+            logo.rotation.y += 0.002;
         }
+                // Animate background particles
+        particlesMesh.rotation.y += 0.0005;
+        particlesMesh.rotation.x += 0.0003;
         
-        renderer.render(scene, camera);
+        const positions = particlesMesh.geometry.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+            positions[i + 1] += Math.sin(Date.now() * 0.001 + i) * 0.001;
+        }
+        particlesMesh.geometry.attributes.position.needsUpdate = true;
+                renderer.render(scene, camera);
     }
     animate();
     
