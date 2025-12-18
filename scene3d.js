@@ -37,7 +37,7 @@ export function init3DScene() {
     
     // Background particles - dust effect
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 1200;
+    const particlesCount = 14500;
     const posArray = new Float32Array(particlesCount * 3);
     const colorArray = new Float32Array(particlesCount * 3);
     

@@ -67,9 +67,7 @@
                 const pages = data.query.pages;
                 const pageId = Object.keys(pages)[0];
                 const content = pages[pageId].revisions[0].slots.main['*'];
-                
-                console.log('Contenuto scaricato, lunghezza:', content.length);
-                
+                                
                 // Parsa il contenuto Lua
                 parseRelicData(content);
                 
@@ -92,8 +90,7 @@
             }
             
             const relicSection = match[1];
-            console.log('Sezione RelicData estratta, lunghezza:', relicSection.length);
-            
+                        
             // Pattern per matchare ogni reliquia completa
             const relicRegex = /\["([^"]+)"\]\s*=\s*\{([\s\S]*?)\n\t\},?/g;
             let relicMatch;
@@ -151,7 +148,6 @@
                 count++;
             }
             
-            console.log(`✅ Caricate ${count} reliquie (${vaultedRelics.length} vaultate, ${activeRelics.length} attive)`);
         }
 
         function searchRelic() {
@@ -159,7 +155,7 @@
             const resultDiv = document.getElementById('result');
             
             if (!input) {
-                resultDiv.innerHTML = '<div class="error">⚠️ Inserisci il nome di una reliquia</div>';
+                resultDiv.innerHTML = '<div class="error"> Inserisci il nome di una reliquia</div>';
                 return;
             }
             
