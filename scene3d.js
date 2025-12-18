@@ -22,25 +22,105 @@ export function init3DScene() {
     
     camera.position.z = 10;
     
-    // Mouse tracking
-    let mouseX = 0;
-    let mouseY = 0;
-    let shouldRotateAuto = true;
-    let wasAutoRotating = true;
-    const baseRotation = { x: 0, z: 0, y: 0 }; // Rotazione di base per ritornare
+    // Controlli per drag del logo con momentum
+    let isDragging = false;
+    let autoRotate = true;
+    let dragTimeout = null;
+    let previousMouseX = 0;
+    let previousMouseY = 0;
+    let velocityX = 0;
+    let velocityY = 0;
+    let momentum = true;
     
-    document.addEventListener('mousemove', (event) => {
-        // Normalizza le coordinate del mouse tra -1 e 1
-        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-        
-        // Controlla se il mouse è su search-container, left-panel o right-panel
+    // Mouse/touch events per controllare il drag e la rotazione
+    container.addEventListener('mousedown', (event) => {
+        // Controlla se il mouse è su elementi interattivi
         const target = event.target;
         const isOnInteractive = target.closest('.search-container') || 
                                 target.closest('.left-panel') || 
-                                target.closest('.right-panel');
+                                target.closest('.right-panel') ||
+                                target.closest('#music-player');
         
-        shouldRotateAuto = !isOnInteractive;
+        if (!isOnInteractive) {
+            isDragging = true;
+            autoRotate = false;
+            momentum = false;
+            clearTimeout(dragTimeout);
+            previousMouseX = event.clientX;
+            previousMouseY = event.clientY;
+            velocityX = 0;
+            velocityY = 0;
+        }
+    });
+    
+    document.addEventListener('mousemove', (event) => {
+        if (isDragging && logo) {
+            const deltaX = event.clientX - previousMouseX;
+            const deltaY = event.clientY - previousMouseY;
+            
+            // Calcola la velocità
+            velocityX = deltaX * 0.01;
+            velocityY = deltaY * 0.01;
+            
+            // Ruota il logo in base al movimento del mouse
+            logo.rotation.y += velocityX;
+            logo.rotation.x += velocityY;
+            
+            previousMouseX = event.clientX;
+            previousMouseY = event.clientY;
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            momentum = true;
+            // Non più timeout, la convergenza avviene automaticamente
+        }
+    });
+    
+    // Touch events per mobile
+    container.addEventListener('touchstart', (event) => {
+        const target = event.target;
+        const isOnInteractive = target.closest('.search-container') || 
+                                target.closest('.left-panel') || 
+                                target.closest('.right-panel') ||
+                                target.closest('#music-player');
+        
+        if (!isOnInteractive && event.touches.length > 0) {
+            isDragging = true;
+            autoRotate = false;
+            momentum = false;
+            clearTimeout(dragTimeout);
+            previousMouseX = event.touches[0].clientX;
+            previousMouseY = event.touches[0].clientY;
+            velocityX = 0;
+            velocityY = 0;
+        }
+    });
+    
+    document.addEventListener('touchmove', (event) => {
+        if (isDragging && logo && event.touches.length > 0) {
+            const deltaX = event.touches[0].clientX - previousMouseX;
+            const deltaY = event.touches[0].clientY - previousMouseY;
+            
+            velocityX = deltaX * 0.01;
+            velocityY = deltaY * 0.01;
+            
+            logo.rotation.y += velocityX;
+            logo.rotation.x += velocityY;
+            
+            previousMouseX = event.touches[0].clientX;
+            previousMouseY = event.touches[0].clientY;
+        }
+    });
+    
+    document.addEventListener('touchend', () => {
+        if (isDragging) {
+            isDragging = false;
+            momentum = true;
+            // Non più timeout, la convergenza avviene automaticamente
+        }
     });
     
     // Create circular texture for particles
@@ -170,44 +250,47 @@ export function init3DScene() {
     );
     
     // Animation loop
+    const autoRotateSpeed = 0.005;
+    
     function animate() {
         requestAnimationFrame(animate);
         
         if (logo) {
-            if (shouldRotateAuto) {
-                // Se stavamo puntando e ora torniamo in auto, fai lerp verso la base
-                if (!wasAutoRotating) {
-                    const distanceX = Math.abs(logo.rotation.x - baseRotation.x);
-                    const distanceY = Math.abs(logo.rotation.y - baseRotation.y);
-                    const distanceZ = Math.abs(logo.rotation.z - baseRotation.z);
-                    
-                    // Se non siamo ancora tornati alla base, fai il lerp
-                    if (distanceX > 0.01 || distanceY > 0.01 || distanceZ > 0.01) {
-                        logo.rotation.x += (baseRotation.x - logo.rotation.x) * 0.05;
-                        logo.rotation.y += (baseRotation.y - logo.rotation.y) * 0.05;
-                        logo.rotation.z += (baseRotation.z - logo.rotation.z) * 0.05;
+            if (autoRotate) {
+                // Rotazione automatica solo sull'asse Y
+                logo.rotation.y += autoRotateSpeed;
+            } else if (momentum) {
+                // Applica il momentum
+                logo.rotation.y += velocityX;
+                logo.rotation.x += velocityY;
+                
+                // Convergi gradualmente verso la velocità di autorotazione sull'asse Y
+                const targetSpeed = autoRotateSpeed;
+                const convergenceRate = 0.02;
+                
+                if (Math.abs(velocityX - targetSpeed) > 0.0001) {
+                    // Convergi verso la velocità target
+                    if (velocityX > targetSpeed) {
+                        velocityX -= Math.abs(velocityX - targetSpeed) * convergenceRate;
                     } else {
-                        // Siamo tornati alla base, riprendi rotazione automatica
-                        wasAutoRotating = true;
+                        velocityX += Math.abs(velocityX - targetSpeed) * convergenceRate;
                     }
                 } else {
-                    // Rotazione automatica su Y (solo dopo essere tornati alla base)
-                    logo.rotation.y += 0.002;
+                    // Raggiunto il target, passa ad autoRotate
+                    velocityX = targetSpeed;
+                    autoRotate = true;
+                    momentum = false;
                 }
                 
-            } else {
-                // Modalità puntamento
-                wasAutoRotating = false;
-                
-                const targetRotationY = mouseX * Math.PI * 0.5;
-                const targetRotationX = -mouseY * Math.PI * 0.3;
-                
-                // Smooth interpolation per un movimento fluido
-                logo.rotation.y += (targetRotationY - logo.rotation.y) * 0.05;
-                logo.rotation.x += (targetRotationX - logo.rotation.x) * 0.05;
+                // Rallenta la rotazione X fino a fermarla
+                velocityY *= 0.95;
+                if (Math.abs(velocityY) < 0.0001) {
+                    velocityY = 0;
+                }
             }
         }
-                // Animate background particles
+        
+        // Animate background particles
         particlesMesh.rotation.y += 0.0005;
         particlesMesh.rotation.x += 0.0003;
         
@@ -219,7 +302,8 @@ export function init3DScene() {
             positions[i + 1] += Math.sin(Date.now() * 0.001 + i) * 0.001;
         }
         particlesMesh.geometry.attributes.position.needsUpdate = true;
-                renderer.render(scene, camera);
+        
+        renderer.render(scene, camera);
     }
     animate();
     
