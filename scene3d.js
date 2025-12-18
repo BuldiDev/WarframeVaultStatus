@@ -35,36 +35,82 @@ export function init3DScene() {
     ctx.fillRect(0, 0, 32, 32);
     const circleTexture = new THREE.CanvasTexture(canvas);
     
+    // ===== CONFIGURAZIONE PARTICELLE =====
+    const PARTICLE_COLOR = 'rgba(163, 163, 163, 0.5)'; // Modifica questo valore
+    // =====================================
+    
+    // Estrai i valori RGBA
+    const rgbaMatch = PARTICLE_COLOR.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+    const r = parseInt(rgbaMatch[1]) / 255;
+    const g = parseInt(rgbaMatch[2]) / 255;
+    const b = parseInt(rgbaMatch[3]) / 255;
+    const a = parseFloat(rgbaMatch[4] || 1);
+    
     // Background particles - dust effect
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 14500;
+    const particlesCount = 500;
     const posArray = new Float32Array(particlesCount * 3);
     const colorArray = new Float32Array(particlesCount * 3);
+    const randomArray = new Float32Array(particlesCount);
     
     for (let i = 0; i < particlesCount * 3; i += 3) {
         // Position - più concentrate vicino alla camera
-        posArray[i] = (Math.random() - 0.5) * 40;
-        posArray[i + 1] = (Math.random() - 0.5) * 40;
-        posArray[i + 2] = (Math.random() - 0.5) * 40;
+        posArray[i] = (Math.random() - 0.5) * 25;
+        posArray[i + 1] = (Math.random() - 0.5) * 25;
+        posArray[i + 2] = (Math.random() - 0.5) * 25;
         
-        // Gradiente più scuro - da grigio scuro a grigio chiaro
-        const grayValue = 0.3 + Math.random() * 0.5; // da grigio scuro a chiaro
-        colorArray[i] = grayValue;
-        colorArray[i + 1] = grayValue;
-        colorArray[i + 2] = grayValue;
+        // Colore uniforme
+        colorArray[i] = r;
+        colorArray[i + 1] = g;
+        colorArray[i + 2] = b;
+        
+        // Random offset per timing diverso
+        randomArray[i / 3] = Math.random() * Math.PI * 2;
     }
     
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+    particlesGeometry.setAttribute('aRandom', new THREE.BufferAttribute(randomArray, 1));
     
-    const particlesMaterial = new THREE.PointsMaterial({
-        size: 0.2,
-        vertexColors: true,
+    const particlesMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            uTime: { value: 0 },
+            uTexture: { value: circleTexture },
+            uBaseAlpha: { value: a }
+        },
+        vertexShader: `
+            attribute float aRandom;
+            attribute vec3 color;
+            varying vec3 vColor;
+            varying float vRandom;
+            uniform float uTime;
+            
+            void main() {
+                vColor = color;
+                vRandom = aRandom;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = 0.4 * (300.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            uniform sampler2D uTexture;
+            uniform float uTime;
+            uniform float uBaseAlpha;
+            varying vec3 vColor;
+            varying float vRandom;
+            
+            void main() {
+                vec2 uv = gl_PointCoord;
+                vec4 texture = texture2D(uTexture, uv);
+                
+                float animatedOpacity = 0.4 + sin(uTime * 2.0 + vRandom) * 0.15;
+                float finalOpacity = uBaseAlpha * animatedOpacity;
+                
+                gl_FragColor = vec4(vColor, finalOpacity * texture.a);
+            }
+        `,
         transparent: true,
-        opacity: 0.9,
-        sizeAttenuation: true,
-        map: circleTexture,
-        alphaTest: 0.01,
         depthWrite: false
     });
     
@@ -92,7 +138,6 @@ export function init3DScene() {
             logo.position.y = -center.y;
             logo.position.z = -center.z;
             
-            console.log('Logo caricato!');
         },
         undefined,
         (error) => {
@@ -110,6 +155,9 @@ export function init3DScene() {
                 // Animate background particles
         particlesMesh.rotation.y += 0.0005;
         particlesMesh.rotation.x += 0.0003;
+        
+        // Aggiorna il tempo per lo shader
+        particlesMaterial.uniforms.uTime.value = Date.now() * 0.001;
         
         const positions = particlesMesh.geometry.attributes.position.array;
         for (let i = 0; i < positions.length; i += 3) {
