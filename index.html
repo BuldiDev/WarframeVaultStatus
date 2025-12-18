@@ -309,13 +309,38 @@
                     <p><strong>Introduced:</strong> ${relic.Introduced}</p>
                     
                     <div class="relic-details">
-                        <h3>Content:</h3>
+                        <div class="content-header">
+                            <h3>Content:</h3>
+                            <div class="help-container">
+                                <span class="help-icon">?</span>
+                                <div class="drop-guide-tooltip">
+                                    <p><strong>Drop Chances:</strong></p>
+                                    <div class="refinement-section">
+                                        <p class="refinement-title">Intact:</p>
+                                        <p>Common: 25.33% | Uncommon: 11% | Rare: 2%</p>
+                                    </div>
+                                    <div class="refinement-section">
+                                        <p class="refinement-title">Exceptional:</p>
+                                        <p>Common: 23.33% | Uncommon: 13% | Rare: 4%</p>
+                                    </div>
+                                    <div class="refinement-section">
+                                        <p class="refinement-title">Flawless:</p>
+                                        <p>Common: 20% | Uncommon: 17% | Rare: 6%</p>
+                                    </div>
+                                    <div class="refinement-section">
+                                        <p class="refinement-title">Radiant:</p>
+                                        <p>Common: 16.67% | Uncommon: 20% | Rare: 10%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <ul class="drop-list">
             `;
             
             relic.Drops.forEach(drop => {
                 const rarityClass = drop.Rarity.toLowerCase();
                 const itemName = `${drop.Item}${drop.Part ? ' - ' + drop.Part : ''}`;
+                
                 html += `
                     <li class="drop-item ${rarityClass}" onclick="selectAndSearchItem('${itemName.replace(/'/g, "\\'")}')">
                         <span class="item-name-underline">${itemName}</span> 

@@ -387,6 +387,87 @@ button:hover {
 .uncommon { border-left-color: #C0C0C0; }
 .rare { border-left-color: #DAA520; font-weight: 400; }
 
+/* Help icon e drop guide */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.content-header h3 {
+    margin: 0;
+}
+
+.help-container {
+    position: relative;
+    display: inline-block;
+}
+
+.help-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #999;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75em;
+    font-weight: 700;
+    cursor: help;
+    transition: background 0.2s;
+}
+
+.help-icon:hover {
+    background: #666;
+}
+
+.drop-guide-tooltip {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 28px;
+    min-width: 280px;
+    padding: 12px 15px;
+    background: white;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    font-size: 0.75em;
+}
+
+.help-container:hover .drop-guide-tooltip {
+    display: block;
+}
+
+.drop-guide-tooltip p {
+    margin: 3px 0;
+    color: #2a2a2a;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+}
+
+.drop-guide-tooltip p:first-child {
+    font-weight: 400;
+    margin-bottom: 8px;
+}
+
+.refinement-section {
+    margin-bottom: 8px;
+}
+
+.refinement-section:last-child {
+    margin-bottom: 0;
+}
+
+.refinement-title {
+    font-weight: 400 !important;
+    margin-bottom: 2px !important;
+    color: #000 !important;
+}
+
 /* Footer */
 .footer {
     position: fixed;
