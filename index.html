@@ -5,21 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warframe Vault Checker</title>
     <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 Warframe Vault Checker</h1>
-        
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Cerca reliquia (es: Lith B1, Meso V5, Neo T4...)" autocomplete="off">
-            <button onclick="searchRelic()">Cerca</button>
-            <div id="suggestions" class="suggestions"></div>
+    <div id="scene-container"></div>
+    <div class="dots-pattern dots-left"></div>
+    <div class="dots-pattern dots-right"></div>
+    
+    <div id="app">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search relic..." autocomplete="off">
+            <button onclick="searchRelic()">Search</button>
+            <div id="suggestions"></div>
         </div>
         
-        <div id="result"></div>
-        <div id="stats" class="stats"></div>
+        <div class="left-panel">
+            <h3>Relic Details</h3>
+            <div id="result"></div>
+        </div>
+        
+        <div class="center-area"></div>
+        
+        <div class="right-panel">
+            <h3>Active Relics</h3>
+            <div id="activeRelicsList"></div>
+        </div>
     </div>
 
+    <script type="module">
+        import { init3DScene } from './scene3d.js';
+        init3DScene();
+    </script>
     <script>
         let relicDatabase = {};
         let vaultedRelics = [];
@@ -51,7 +74,7 @@
                 parseRelicData(content);
                 
                 resultDiv.innerHTML = '';
-                displayStats();
+                displayActiveRelics();
                 
             } catch (error) {
                 resultDiv.innerHTML = `<div class="error">❌ Errore nel caricamento: ${error.message}</div>`;
@@ -193,16 +216,26 @@
             resultDiv.innerHTML = html;
         }
 
-        function displayStats() {
-            const statsDiv = document.getElementById('stats');
-            const total = Object.keys(relicDatabase).length;
+        function displayActiveRelics() {
+            const listDiv = document.getElementById('activeRelicsList');
             
-            statsDiv.innerHTML = `
-                <h3>📊 Statistiche Database</h3>
-                <p><strong>Totale reliquie:</strong> ${total}</p>
-                <p><strong>Reliquie vaultate:</strong> <span class="vaulted">${vaultedRelics.length}</span></p>
-                <p><strong>Reliquie attive:</strong> <span class="active">${activeRelics.length}</span></p>
-            `;
+            if (activeRelics.length === 0) {
+                listDiv.innerHTML = '<p style="color: #999;">Loading...</p>';
+                return;
+            }
+            
+            let html = '<div class="relic-list">';
+            activeRelics.forEach(relicName => {
+                html += `<div class="relic-name" onclick="selectAndSearch('${relicName}')">${relicName}</div>`;
+            });
+            html += '</div>';
+            
+            listDiv.innerHTML = html;
+        }
+
+        function selectAndSearch(relicName) {
+            document.getElementById('searchInput').value = relicName;
+            searchRelic();
         }
 
         // Autocomplete
