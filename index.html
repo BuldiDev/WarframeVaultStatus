@@ -34,7 +34,10 @@
         <div class="center-area"></div>
         
         <div class="right-panel">
-            <h3>Active Relics</h3>
+            <div class="relics-header">
+                <button id="activeRelicsBtn" class="toggle-btn active" onclick="toggleRelicsView('active')">Active Relics</button>
+                <button id="vaultedRelicsBtn" class="toggle-btn" onclick="toggleRelicsView('vaulted')">Vaulted Relics</button>
+            </div>
             <div id="activeRelicsList"></div>
         </div>
     </div>
@@ -48,6 +51,7 @@
         let vaultedRelics = [];
         let activeRelics = [];
         let itemDatabase = {}; // Mappa item->reliquie
+        let currentRelicsView = 'active'; // 'active' o 'vaulted'
 
         // Load data on startup
         window.addEventListener('DOMContentLoaded', async () => {
@@ -231,9 +235,16 @@
             const resultDiv = document.getElementById('result');
             const relics = itemDatabase[itemName];
             
+            // Controlla se c'è almeno una reliquia attiva
+            const hasActiveRelic = relics.some(r => !r.vaulted);
+            const itemStatus = hasActiveRelic 
+                ? `<span class="active">ACTIVE</span>`
+                : `<span class="vaulted">VAULTED</span>`;
+            
             let html = `
                 <div class="result">
                     <h2>${itemName}</h2>
+                    <p><strong>Status:</strong> ${itemStatus}</p>
                     <div class="relic-details">
                         <h3>Found in relics:</h3>
                         <ul class="drop-list">
@@ -300,9 +311,10 @@
             
             relic.Drops.forEach(drop => {
                 const rarityClass = drop.Rarity.toLowerCase();
+                const itemName = `${drop.Item}${drop.Part ? ' - ' + drop.Part : ''}`;
                 html += `
-                    <li class="drop-item ${rarityClass}">
-                        ${drop.Item}${drop.Part ? ' - ' + drop.Part : ''} 
+                    <li class="drop-item ${rarityClass}" onclick="selectAndSearchItem('${itemName.replace(/'/g, "\\'")}')">
+                        <span class="item-name-underline">${itemName}</span> 
                         <small>(${drop.Rarity})</small>
                     </li>
                 `;
@@ -319,24 +331,41 @@
 
         function displayActiveRelics() {
             const listDiv = document.getElementById('activeRelicsList');
+            const relicsToShow = currentRelicsView === 'active' ? activeRelics : vaultedRelics;
             
-            if (activeRelics.length === 0) {
+            if (relicsToShow.length === 0) {
                 listDiv.innerHTML = '<p style="color: #999;">Loading...</p>';
                 return;
             }
             
             let html = '<div class="relic-list">';
-            activeRelics.forEach(relicName => {
+            relicsToShow.forEach(relicName => {
                 html += `<div class="relic-name" onclick="selectAndSearch('${relicName}')">${relicName}</div>`;
             });
             html += '</div>';
             
             listDiv.innerHTML = html;
         }
+        
+        function toggleRelicsView(view) {
+            currentRelicsView = view;
+            
+            // Aggiorna i pulsanti
+            document.getElementById('activeRelicsBtn').classList.toggle('active', view === 'active');
+            document.getElementById('vaultedRelicsBtn').classList.toggle('active', view === 'vaulted');
+            
+            // Aggiorna la lista
+            displayActiveRelics();
+        }
 
         function selectAndSearch(relicName) {
             document.getElementById('searchInput').value = relicName;
             searchRelic();
+        }
+        
+        function selectAndSearchItem(itemName) {
+            document.getElementById('searchInput').value = itemName;
+            performSearch();
         }
 
         // Autocomplete
@@ -353,12 +382,20 @@
             const relicMatches = Object.keys(relicDatabase)
                 .filter(name => name.toLowerCase().includes(value))
                 .slice(0, 5)
-                .map(name => ({ name, type: 'relic' }));
+                .map(name => {
+                    const relic = relicDatabase[name];
+                    const status = relic.Vaulted ? 'vaulted' : 'active';
+                    return { name, type: 'relic', status };
+                });
             
             const itemMatches = Object.keys(itemDatabase)
                 .filter(name => name.toLowerCase().includes(value))
                 .slice(0, 5)
-                .map(name => ({ name, type: 'item' }));
+                .map(name => {
+                    const hasActiveRelic = itemDatabase[name].some(r => !r.vaulted);
+                    const status = hasActiveRelic ? 'active' : 'vaulted';
+                    return { name, type: 'item', status };
+                });
             
             const matches = [...relicMatches, ...itemMatches].slice(0, 10);
             
@@ -369,7 +406,8 @@
             
             suggestionsDiv.innerHTML = matches
                 .map(match => {
-                    return `<div class="suggestion-item" onclick="selectSuggestion('${match.name.replace(/'/g, "\\'")}')"> ${match.name}</div>`;
+                    const statusBadge = `<span class="${match.status}">${match.status.toUpperCase()}</span>`;
+                    return `<div class="suggestion-item" onclick="selectSuggestion('${match.name.replace(/'/g, "\\'")}')"><span class="suggestion-name">${match.name}</span> ${statusBadge}</div>`;
                 })
                 .join('');
             suggestionsDiv.style.display = 'block';
