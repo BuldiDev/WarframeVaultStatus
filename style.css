@@ -357,6 +357,209 @@ button:hover {
     background: #2a2a2a;
 }
 
+/* ===== RESPONSIVE DESIGN - TABLET ===== */
+@media screen and (max-width: 1024px) {
+    #app {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr 1fr;
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .search-container {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .left-panel {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-height: 500px;
+    }
+
+    .center-area {
+        display: none;
+    }
+
+    .right-panel {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        max-height: 400px;
+    }
+
+    input {
+        width: 250px;
+    }
+
+    .dots-left,
+    .dots-right {
+        display: none;
+    }
+
+    body::before,
+    body::after {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+/* ===== RESPONSIVE DESIGN - MOBILE ===== */
+@media screen and (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #app {
+        position: relative;
+        height: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        gap: 20px;
+    }
+
+    #scene-container {
+        position: absolute;
+        height: 100%;
+    }
+
+    .search-container {
+        position: sticky;
+        top: 15px;
+        z-index: 10;
+        background: rgba(232, 232, 232, 0.95);
+        padding: 15px;
+        border-radius: 4px;
+        backdrop-filter: blur(10px);
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+
+    input {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+
+    button {
+        width: 100%;
+        padding: 15px;
+        font-size: 0.85em;
+    }
+
+    #suggestions {
+        width: 100%;
+        transform: none;
+        left: 0;
+        max-height: 200px;
+    }
+
+    .left-panel,
+    .right-panel {
+        position: relative;
+        width: 100%;
+        max-height: none;
+        min-height: 300px;
+        padding: 20px;
+    }
+
+    .left-panel h3,
+    .right-panel h3 {
+        font-size: 0.8em;
+        letter-spacing: 2px;
+    }
+
+    .result h2 {
+        font-size: 1.1em;
+        letter-spacing: 1.5px;
+    }
+
+    .result p {
+        font-size: 0.9em;
+    }
+
+    .drop-item {
+        font-size: 0.85em;
+        padding: 12px;
+    }
+
+    .relic-name {
+        font-size: 0.9em;
+        padding: 12px;
+    }
+
+    .dots-left,
+    .dots-right {
+        display: none;
+    }
+
+    body::before,
+    body::after {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+/* ===== RESPONSIVE DESIGN - MOBILE SMALL ===== */
+@media screen and (max-width: 480px) {
+    #app {
+        padding: 10px;
+        gap: 15px;
+    }
+
+    .search-container {
+        top: 10px;
+        padding: 10px;
+    }
+
+    input {
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    button {
+        padding: 12px;
+    }
+
+    .left-panel,
+    .right-panel {
+        padding: 15px;
+        min-height: 250px;
+    }
+
+    .left-panel h3,
+    .right-panel h3 {
+        font-size: 0.7em;
+        margin-bottom: 15px;
+    }
+
+    .result h2 {
+        font-size: 1em;
+        letter-spacing: 1px;
+    }
+
+    .result p {
+        font-size: 0.85em;
+    }
+
+    .drop-item {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+
+    .relic-name {
+        font-size: 0.85em;
+        padding: 10px;
+    }
+
+    body::before,
+    body::after {
+        display: none;
+    }
+}
+
 
 
 

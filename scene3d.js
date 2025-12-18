@@ -60,6 +60,9 @@ export function init3DScene() {
     const PARTICLE_COLOR = 'rgba(163, 163, 163, 0.5)'; // Modifica questo valore
     // =====================================
     
+    // Rileva se siamo su mobile per ottimizzare le prestazioni
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
     // Estrai i valori RGBA
     const rgbaMatch = PARTICLE_COLOR.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
     const r = parseInt(rgbaMatch[1]) / 255;
@@ -69,7 +72,7 @@ export function init3DScene() {
     
     // Background particles - dust effect
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 500;
+    const particlesCount = isMobile ? 150 : 500; // Riduce le particelle su mobile
     const posArray = new Float32Array(particlesCount * 3);
     const colorArray = new Float32Array(particlesCount * 3);
     const randomArray = new Float32Array(particlesCount);
@@ -225,5 +228,14 @@ export function init3DScene() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Ottimizza le prestazioni su mobile quando si ridimensiona
+        const isNowMobile = window.innerWidth < 768;
+        if (isNowMobile && particlesMesh.geometry.attributes.position.count > 200) {
+            // Riduci le particelle visibili su mobile
+            particlesMaterial.uniforms.uBaseAlpha.value = a * 0.6;
+        } else if (!isNowMobile && particlesMaterial.uniforms.uBaseAlpha.value !== a) {
+            particlesMaterial.uniforms.uBaseAlpha.value = a;
+        }
     });
 }
