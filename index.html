@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,17 +48,17 @@
         let vaultedRelics = [];
         let activeRelics = [];
 
-        // Carica dati all'avvio
+        // Load data on startup
         window.addEventListener('DOMContentLoaded', async () => {
             await loadRelicData();
         });
 
         async function loadRelicData() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<div class="loading"> Caricamento dati da Warframe Wiki...</div>';
+            resultDiv.innerHTML = '<div class="loading"> Loading data from Warframe Wiki...</div>';
 
             try {
-                // Usa l'API MediaWiki per ottenere il contenuto grezzo
+                // Use MediaWiki API to get raw content
                 const url = 'https://warframe.fandom.com/api.php?action=query&format=json&prop=revisions&titles=Module:Void/data&rvprop=content&rvslots=main&origin=*';
                 
                 const response = await fetch(url);
@@ -68,14 +68,14 @@
                 const pageId = Object.keys(pages)[0];
                 const content = pages[pageId].revisions[0].slots.main['*'];
                                 
-                // Parsa il contenuto Lua
+                // Parse Lua content
                 parseRelicData(content);
                 
                 resultDiv.innerHTML = '';
                 displayActiveRelics();
                 
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Errore nel caricamento: ${error.message}</div>`;
+                resultDiv.innerHTML = `<div class="error">Loading error: ${error.message}</div>`;
                 console.error(error);
             }
         }
@@ -86,12 +86,12 @@
             const match = luaContent.match(relicDataRegex);
             
             if (!match) {
-                throw new Error('RelicData non trovato');
+                throw new Error('RelicData not found');
             }
             
             const relicSection = match[1];
 
-            // Pattern per matchare ogni reliquia completa
+            // Pattern to match each complete relic
             const relicRegex = /\["([^"]+)"\]\s*=\s*\{([\s\S]*?)\n\t\},?/g;
             let relicMatch;
             let count = 0;
@@ -100,10 +100,10 @@
                 const relicName = relicMatch[1];
                 const relicBody = relicMatch[2];
                 
-                // Salta Requiem
+                // Skip Requiem
                 if (relicName.startsWith('Requiem')) continue;
                 
-                // Estrai campi
+                // Extract fields
                 const tierMatch = relicBody.match(/Tier\s*=\s*"([^"]+)"/);
                 if (!tierMatch) continue;
                 
@@ -113,7 +113,7 @@
                 const vaultedMatch = relicBody.match(/Vaulted\s*=\s*"([^"]+)"/);
                 const introducedMatch = relicBody.match(/Introduced\s*=\s*"([^"]+)"/);
                 
-                // Estrai drops
+                // Extract drops
                 const dropsMatch = relicBody.match(/Drops\s*=\s*\{([\s\S]*?)\n\t\t\}/);
                 const drops = [];
                 
@@ -155,17 +155,30 @@
             const resultDiv = document.getElementById('result');
             
             if (!input) {
-                resultDiv.innerHTML = '<div class="error"> Inserisci il nome di una reliquia</div>';
+                resultDiv.innerHTML = '<div class="error"> Enter a relic name</div>';
                 return;
             }
             
-            // Cerca case-insensitive
-            const relicKey = Object.keys(relicDatabase).find(key => 
+            // Check if database is loaded
+            if (Object.keys(relicDatabase).length === 0) {
+                resultDiv.innerHTML = '<div class="error">Please wait for database loading...</div>';
+                return;
+            }
+            
+            // Case-insensitive search - exact match first
+            let relicKey = Object.keys(relicDatabase).find(key => 
                 key.toLowerCase() === input.toLowerCase()
             );
             
+            // If no exact match found, search for first containing the text
             if (!relicKey) {
-                resultDiv.innerHTML = `<div class="error">❌ Reliquia "${input}" non trovata nel database</div>`;
+                relicKey = Object.keys(relicDatabase).find(key => 
+                    key.toLowerCase().includes(input.toLowerCase())
+                );
+            }
+            
+            if (!relicKey) {
+                resultDiv.innerHTML = `<div class="error">Relic "${input}" not found in database</div>`;
                 return;
             }
             
@@ -176,28 +189,26 @@
         function displayRelicDetails(relic) {
             const resultDiv = document.getElementById('result');
             const status = relic.Vaulted 
-                ? `<span class="vaulted">✗ VAULTATA</span> (dal ${relic.Vaulted})`
-                : `<span class="active">✓ ATTIVA</span>`;
+                ? `<span class="vaulted">VAULTED</span> (since ${relic.Vaulted})`
+                : `<span class="active">ACTIVE</span>`;
             
             let html = `
                 <div class="result">
                     <h2>${relic.Name}</h2>
                     <p><strong>Tier:</strong> ${relic.Tier}</p>
-                    <p><strong>Stato:</strong> ${status}</p>
-                    <p><strong>Introdotta:</strong> ${relic.Introduced}</p>
+                    <p><strong>Status:</strong> ${status}</p>
+                    <p><strong>Introduced:</strong> ${relic.Introduced}</p>
                     
                     <div class="relic-details">
-                        <h3>Contenuto:</h3>
+                        <h3>Content:</h3>
                         <ul class="drop-list">
             `;
             
             relic.Drops.forEach(drop => {
                 const rarityClass = drop.Rarity.toLowerCase();
-                const emoji = drop.Rarity === 'Common' ? '⚪' : 
-                             drop.Rarity === 'Uncommon' ? '🟡' : '⭐';
                 html += `
                     <li class="drop-item ${rarityClass}">
-                        ${emoji} ${drop.Item}${drop.Part ? ' - ' + drop.Part : ''} 
+                        ${drop.Item}${drop.Part ? ' - ' + drop.Part : ''} 
                         <small>(${drop.Rarity})</small>
                     </li>
                 `;
@@ -265,14 +276,14 @@
             searchRelic();
         }
 
-        // Chiudi suggestions quando si clicca fuori
+        // Close suggestions when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-box')) {
                 document.getElementById('suggestions').style.display = 'none';
             }
         });
 
-        // Enter per cercare
+        // Press Enter to search
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 searchRelic();
