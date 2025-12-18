@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warframe Vault Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Warframe Vault Checker</h1>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Cerca reliquia (es: Lith B1, Meso V5, Neo T4...)" autocomplete="off">
+            <button onclick="searchRelic()">Cerca</button>
+            <div id="suggestions" class="suggestions"></div>
+        </div>
+        
+        <div id="result"></div>
+        <div id="stats" class="stats"></div>
+    </div>
+
+    <script>
+        let relicDatabase = {};
+        let vaultedRelics = [];
+        let activeRelics = [];
+
+        // Carica dati all'avvio
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadRelicData();
+        });
+
+        async function loadRelicData() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading">⏳ Caricamento dati da Warframe Wiki...</div>';
+
+            try {
+                // Usa l'API MediaWiki per ottenere il contenuto grezzo
+                const url = 'https://warframe.fandom.com/api.php?action=query&format=json&prop=revisions&titles=Module:Void/data&rvprop=content&rvslots=main&origin=*';
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const content = pages[pageId].revisions[0].slots.main['*'];
+                
+                console.log('Contenuto scaricato, lunghezza:', content.length);
+                
+                // Parsa il contenuto Lua
+                parseRelicData(content);
+                
+                resultDiv.innerHTML = '';
+                displayStats();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Errore nel caricamento: ${error.message}</div>`;
+                console.error(error);
+            }
+        }
+
+        function parseRelicData(luaContent) {
+            // Trova RelicData usando regex
+            const relicDataRegex = /RelicData\s*=\s*\{([\s\S]*?)\n\}\n/;
+            const match = luaContent.match(relicDataRegex);
+            
+            if (!match) {
+                throw new Error('RelicData non trovato');
+            }
+            
+            const relicSection = match[1];
+            console.log('Sezione RelicData estratta, lunghezza:', relicSection.length);
+            
+            // Pattern per matchare ogni reliquia completa
+            const relicRegex = /\["([^"]+)"\]\s*=\s*\{([\s\S]*?)\n\t\},?/g;
+            let relicMatch;
+            let count = 0;
+            
+            while ((relicMatch = relicRegex.exec(relicSection)) !== null) {
+                const relicName = relicMatch[1];
+                const relicBody = relicMatch[2];
+                
+                // Salta Requiem
+                if (relicName.startsWith('Requiem')) continue;
+                
+                // Estrai campi
+                const tierMatch = relicBody.match(/Tier\s*=\s*"([^"]+)"/);
+                if (!tierMatch) continue;
+                
+                const tier = tierMatch[1];
+                if (!['Lith', 'Meso', 'Neo', 'Axi'].includes(tier)) continue;
+                
+                const vaultedMatch = relicBody.match(/Vaulted\s*=\s*"([^"]+)"/);
+                const introducedMatch = relicBody.match(/Introduced\s*=\s*"([^"]+)"/);
+                
+                // Estrai drops
+                const dropsMatch = relicBody.match(/Drops\s*=\s*\{([\s\S]*?)\n\t\t\}/);
+                const drops = [];
+                
+                if (dropsMatch) {
+                    const dropsContent = dropsMatch[1];
+                    const dropRegex = /\{\s*Item\s*=\s*"([^"]+)"[^}]*Part\s*=\s*"([^"]*)"[^}]*Rarity\s*=\s*"([^"]+)"[^}]*\}/g;
+                    let dropMatch;
+                    
+                    while ((dropMatch = dropRegex.exec(dropsContent)) !== null) {
+                        drops.push({
+                            Item: dropMatch[1],
+                            Part: dropMatch[2],
+                            Rarity: dropMatch[3]
+                        });
+                    }
+                }
+                
+                relicDatabase[relicName] = {
+                    Name: relicName,
+                    Tier: tier,
+                    Introduced: introducedMatch ? introducedMatch[1] : '',
+                    Vaulted: vaultedMatch ? vaultedMatch[1] : null,
+                    Drops: drops
+                };
+                
+                if (vaultedMatch) {
+                    vaultedRelics.push(relicName);
+                } else {
+                    activeRelics.push(relicName);
+                }
+                
+                count++;
+            }
+            
+            console.log(`✅ Caricate ${count} reliquie (${vaultedRelics.length} vaultate, ${activeRelics.length} attive)`);
+        }
+
+        function searchRelic() {
+            const input = document.getElementById('searchInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!input) {
+                resultDiv.innerHTML = '<div class="error">⚠️ Inserisci il nome di una reliquia</div>';
+                return;
+            }
+            
+            // Cerca case-insensitive
+            const relicKey = Object.keys(relicDatabase).find(key => 
+                key.toLowerCase() === input.toLowerCase()
+            );
+            
+            if (!relicKey) {
+                resultDiv.innerHTML = `<div class="error">❌ Reliquia "${input}" non trovata nel database</div>`;
+                return;
+            }
+            
+            const relic = relicDatabase[relicKey];
+            displayRelicDetails(relic);
+        }
+
+        function displayRelicDetails(relic) {
+            const resultDiv = document.getElementById('result');
+            const status = relic.Vaulted 
+                ? `<span class="vaulted">✗ VAULTATA</span> (dal ${relic.Vaulted})`
+                : `<span class="active">✓ ATTIVA</span>`;
+            
+            let html = `
+                <div class="result">
+                    <h2>${relic.Name}</h2>
+                    <p><strong>Tier:</strong> ${relic.Tier}</p>
+                    <p><strong>Stato:</strong> ${status}</p>
+                    <p><strong>Introdotta:</strong> ${relic.Introduced}</p>
+                    
+                    <div class="relic-details">
+                        <h3>Contenuto:</h3>
+                        <ul class="drop-list">
+            `;
+            
+            relic.Drops.forEach(drop => {
+                const rarityClass = drop.Rarity.toLowerCase();
+                const emoji = drop.Rarity === 'Common' ? '⚪' : 
+                             drop.Rarity === 'Uncommon' ? '🟡' : '⭐';
+                html += `
+                    <li class="drop-item ${rarityClass}">
+                        ${emoji} ${drop.Item}${drop.Part ? ' - ' + drop.Part : ''} 
+                        <small>(${drop.Rarity})</small>
+                    </li>
+                `;
+            });
+            
+            html += `
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = html;
+        }
+
+        function displayStats() {
+            const statsDiv = document.getElementById('stats');
+            const total = Object.keys(relicDatabase).length;
+            
+            statsDiv.innerHTML = `
+                <h3>📊 Statistiche Database</h3>
+                <p><strong>Totale reliquie:</strong> ${total}</p>
+                <p><strong>Reliquie vaultate:</strong> <span class="vaulted">${vaultedRelics.length}</span></p>
+                <p><strong>Reliquie attive:</strong> <span class="active">${activeRelics.length}</span></p>
+            `;
+        }
+
+        // Autocomplete
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const value = e.target.value.toLowerCase();
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            if (value.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            const matches = Object.keys(relicDatabase)
+                .filter(name => name.toLowerCase().includes(value))
+                .slice(0, 10);
+            
+            if (matches.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            suggestionsDiv.innerHTML = matches
+                .map(name => `<div class="suggestion-item" onclick="selectRelic('${name}')">${name}</div>`)
+                .join('');
+            suggestionsDiv.style.display = 'block';
+        });
+
+        function selectRelic(name) {
+            document.getElementById('searchInput').value = name;
+            document.getElementById('suggestions').style.display = 'none';
+            searchRelic();
+        }
+
+        // Chiudi suggestions quando si clicca fuori
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box')) {
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        });
+
+        // Enter per cercare
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchRelic();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #eee;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #00d9ff;
+    text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+}
+
+.search-box {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.search-box input {
+    width: calc(100% - 120px);
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #00d9ff;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    margin-right: 10px;
+}
+
+.search-box button {
+    padding: 12px 30px;
+    font-size: 16px;
+    background: #00d9ff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #1a1a2e;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.search-box button:hover {
+    background: #00b8d4;
+    transform: translateY(-2px);
+}
+
+.suggestions {
+    background: white;
+    border: 2px solid #00d9ff;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 5px;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 10px;
+    cursor: pointer;
+    color: #333;
+    border-bottom: 1px solid #eee;
+}
+
+.suggestion-item:hover {
+    background: #00d9ff;
+    color: white;
+}
+
+.result {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.vaulted {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.active {
+    color: #44ff44;
+    font-weight: bold;
+}
+
+.relic-details {
+    margin-top: 15px;
+}
+
+.drop-list {
+    list-style: none;
+    margin-top: 10px;
+}
+
+.drop-item {
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.common { border-left: 4px solid #999; }
+.uncommon { border-left: 4px solid #44ff44; }
+.rare { border-left: 4px solid #ffd700; }
+
+.stats {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #00d9ff;
+}
+
+.error {
+    color: #ff4444;
+    padding: 15px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 5px;
+    margin: 10px 0;
+}
