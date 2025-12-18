@@ -55,7 +55,7 @@
 
         async function loadRelicData() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<div class="loading">⏳ Caricamento dati da Warframe Wiki...</div>';
+            resultDiv.innerHTML = '<div class="loading"> Caricamento dati da Warframe Wiki...</div>';
 
             try {
                 // Usa l'API MediaWiki per ottenere il contenuto grezzo
@@ -90,7 +90,7 @@
             }
             
             const relicSection = match[1];
-                        
+
             // Pattern per matchare ogni reliquia completa
             const relicRegex = /\["([^"]+)"\]\s*=\s*\{([\s\S]*?)\n\t\},?/g;
             let relicMatch;

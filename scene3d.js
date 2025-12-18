@@ -22,6 +22,27 @@ export function init3DScene() {
     
     camera.position.z = 10;
     
+    // Mouse tracking
+    let mouseX = 0;
+    let mouseY = 0;
+    let shouldRotateAuto = true;
+    let wasAutoRotating = true;
+    const baseRotation = { x: 0, z: 0, y: 0 }; // Rotazione di base per ritornare
+    
+    document.addEventListener('mousemove', (event) => {
+        // Normalizza le coordinate del mouse tra -1 e 1
+        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        
+        // Controlla se il mouse è su search-container, left-panel o right-panel
+        const target = event.target;
+        const isOnInteractive = target.closest('.search-container') || 
+                                target.closest('.left-panel') || 
+                                target.closest('.right-panel');
+        
+        shouldRotateAuto = !isOnInteractive;
+    });
+    
     // Create circular texture for particles
     const canvas = document.createElement('canvas');
     canvas.width = 32;
@@ -150,7 +171,38 @@ export function init3DScene() {
         requestAnimationFrame(animate);
         
         if (logo) {
-            logo.rotation.y += 0.002;
+            if (shouldRotateAuto) {
+                // Se stavamo puntando e ora torniamo in auto, fai lerp verso la base
+                if (!wasAutoRotating) {
+                    const distanceX = Math.abs(logo.rotation.x - baseRotation.x);
+                    const distanceY = Math.abs(logo.rotation.y - baseRotation.y);
+                    const distanceZ = Math.abs(logo.rotation.z - baseRotation.z);
+                    
+                    // Se non siamo ancora tornati alla base, fai il lerp
+                    if (distanceX > 0.01 || distanceY > 0.01 || distanceZ > 0.01) {
+                        logo.rotation.x += (baseRotation.x - logo.rotation.x) * 0.05;
+                        logo.rotation.y += (baseRotation.y - logo.rotation.y) * 0.05;
+                        logo.rotation.z += (baseRotation.z - logo.rotation.z) * 0.05;
+                    } else {
+                        // Siamo tornati alla base, riprendi rotazione automatica
+                        wasAutoRotating = true;
+                    }
+                } else {
+                    // Rotazione automatica su Y (solo dopo essere tornati alla base)
+                    logo.rotation.y += 0.002;
+                }
+                
+            } else {
+                // Modalità puntamento
+                wasAutoRotating = false;
+                
+                const targetRotationY = mouseX * Math.PI * 0.5;
+                const targetRotationX = -mouseY * Math.PI * 0.3;
+                
+                // Smooth interpolation per un movimento fluido
+                logo.rotation.y += (targetRotationY - logo.rotation.y) * 0.05;
+                logo.rotation.x += (targetRotationX - logo.rotation.x) * 0.05;
+            }
         }
                 // Animate background particles
         particlesMesh.rotation.y += 0.0005;
