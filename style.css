@@ -478,6 +478,7 @@ button:hover {
     background: rgba(255, 255, 255, 0.9);
     padding: 8px 20px;
     border: 1px solid #2a2a2a;
+    transition: all 0.3s ease;
 }
 
 .footer p {
@@ -836,14 +837,164 @@ button:hover {
     height: 200px;
 }
 
-@media (max-width: 768px) {
+/* Stile per apertura verso l'alto su mobile */
+@media screen and (max-width: 1024px) {
+    #player-container {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #2a2a2a;
+        border-bottom: none;
+    }
+}
+
+/* Music Player - Tablet */
+@media screen and (max-width: 1024px) {
     #music-player {
-        top: 10px;
-        left: 10px;
-        width: 280px;
+        top: auto;
+        bottom: 20px;
+        left: auto;
+        right: 20px;
+        width: 300px;
+    }
+
+    #player-header {
+        padding: 10px 12px;
+    }
+
+    #player-header span {
+        font-size: 0.65em;
+    }
+
+    .player-controls {
+        gap: 6px;
+    }
+
+    #audio-toggle,
+    #expand-toggle,
+    #play-pause-toggle {
+        padding: 6px 9px;
+    }
+
+    #youtube-player {
+        height: 180px;
+    }
+
+    /* Footer si sposta a sinistra del music player */
+    .footer {
+        left: 20px;
+        right: 340px;
+        transform: none;
+        bottom: 20px;
+    }
+}
+
+/* Music Player - Mobile */
+@media screen and (max-width: 768px) {
+    #music-player {
+        top: auto;
+        bottom: 10px;
+        left: auto;
+        right: 10px;
+        width: 200px;
     }
     
-    #player-container iframe {
+    #player-header {
+        padding: 10px 12px;
+    }
+
+    #player-header span {
+        font-size: 0.65em;
+        letter-spacing: 1.5px;
+    }
+
+    .player-controls {
+        gap: 5px;
+    }
+
+    #audio-toggle,
+    #expand-toggle,
+    #play-pause-toggle {
+        padding: 5px 8px;
+    }
+
+    #audio-toggle svg,
+    #expand-toggle svg,
+    #play-pause-toggle svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    #youtube-player {
         height: 160px;
+    }
+
+    /* Footer si sposta a sinistra del music player */
+    .footer {
+        left: 10px;
+        right: 220px;
+        transform: none;
+        bottom: 10px;
+        padding: 10px 12px;
+        width: auto;
+    }
+
+    .footer p {
+        font-size: 0.65em;
+    }
+}
+
+/* Music Player - Mobile Small */
+@media screen and (max-width: 480px) {
+    #music-player {
+        top: auto;
+        bottom: 10px;
+        left: auto;
+        right: 10px;
+        width: 170px;
+    }
+
+    #player-header {
+        padding: 8px 10px;
+    }
+
+    #player-header span {
+        font-size: 0.55em;
+        letter-spacing: 1px;
+    }
+
+    .player-controls {
+        gap: 4px;
+    }
+
+    #audio-toggle,
+    #expand-toggle,
+    #play-pause-toggle {
+        padding: 4px 6px;
+    }
+
+    #audio-toggle svg,
+    #expand-toggle svg,
+    #play-pause-toggle svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    #youtube-player {
+        height: 130px;
+    }
+
+    /* Footer si adatta per schermi piccoli */
+    .footer {
+        left: 10px;
+        right: 190px;
+        bottom: 10px;
+        padding: 8px 10px;
+    }
+
+    .footer p {
+        font-size: 0.6em;
     }
 }
