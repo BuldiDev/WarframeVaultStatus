@@ -43,7 +43,7 @@
     </div>
 
     <footer class="footer">
-        <p>Data sourced from <a href="https://warframe.fandom.com/wiki/Void_Relic" target="_blank" rel="noopener noreferrer">Warframe Wiki</a> | Music from <a href="https://www.youtube.com/watch?v=yPKo04oNQ9k&list=RDyPKo04oNQ9k&start_radio=1" target="_blank" rel="noopener noreferrer">Official Warframe</a></p>
+        <p>Data sourced from <a href="https://warframe.fandom.com/wiki/Void_Relic" target="_blank" rel="noopener noreferrer">Warframe Wiki</a></p>
     </footer>
 
     <!-- YouTube Music Player -->
@@ -89,19 +89,24 @@
         let youtubePlayer = null;
         let isMuted = localStorage.getItem('musicMuted') === 'true' || false;
         let isExpanded = localStorage.getItem('musicExpanded') === 'true' || false;
+        let shouldAutoplay = localStorage.getItem('musicAutoplay') !== 'false'; // Default true se non salvato
         let isPlaying = false; // Parte da false, poi diventa true quando inizia
 
         // YouTube API ready callback
         function onYouTubeIframeAPIReady() {
+            const host = window.location.protocol + '//' + window.location.host;
             youtubePlayer = new YT.Player('youtube-player', {
-                videoId: 'yPKo04oNQ9k',
+                host: 'https://www.youtube.com',
+                videoId: 'gUgyfUIhGQc',
                 playerVars: {
-                    'autoplay': 1,
+                    'autoplay': 0,
                     'controls': 1,
                     'loop': 1,
-                    'playlist': 'yPKo04oNQ9k,xrQtsLVa504,kN_LvY97Rco,ubKUP8c0FHE,2CtP3pDfxYI',
+                    'playlist': 'gUgyfUIhGQc',
                     'modestbranding': 1,
-                    'rel': 0
+                    'rel': 0,
+                    'origin': host,
+                    'enablejsapi': 1
                 },
                 events: {
                     'onReady': onPlayerReady,
@@ -119,28 +124,40 @@
                 event.target.mute();
             }
             
-            // Avvia SEMPRE il video al caricamento, indipendentemente dallo stato salvato
-            setTimeout(() => {
-                event.target.playVideo();
-                isPlaying = true;
-            }, 100);
+            // Imposta icona iniziale come play (video non ancora partito)
+            const button = document.getElementById('play-pause-toggle');
+            button.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            `;
+            isPlaying = false;
             
             // Ripristina stato espansione
             if (isExpanded) {
                 const container = document.getElementById('player-container');
-                const button = document.getElementById('expand-toggle');
+                const expandButton = document.getElementById('expand-toggle');
                 container.style.display = 'block';
-                button.innerHTML = `
+                expandButton.innerHTML = `
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="18 15 12 9 6 15"></polyline>
                     </svg>
                 `;
             }
+            
+            // Aspetta che la thumbnail sia caricata, poi avvia se autoplay era attivo
+            setTimeout(() => {
+                console.log('shouldAutoplay:', shouldAutoplay);
+                if (shouldAutoplay) {
+                    console.log('Avvio autoplay del video');
+                    event.target.playVideo();
+                }
+            }, 1000);
         }
 
         function onPlayerStateChange(event) {
             const button = document.getElementById('play-pause-toggle');
-            // YT.PlayerState.PLAYING = 1, YT.PlayerState.PAUSED = 2, YT.PlayerState.ENDED = 0
+            // YT.PlayerState.UNSTARTED = -1, ENDED = 0, PLAYING = 1, PAUSED = 2, BUFFERING = 3, CUED = 5
             if (event.data === 1) { // Playing
                 isPlaying = true;
                 button.innerHTML = `
@@ -149,40 +166,36 @@
                         <rect x="14" y="4" width="4" height="16"></rect>
                     </svg>
                 `;
-            } else if (event.data === 2 || event.data === 5) { // Paused or Cued
+            } else if (event.data === 2 || event.data === 5 || event.data === -1 || event.data === 0) { // Paused, Cued, Unstarted, or Ended
                 isPlaying = false;
                 button.innerHTML = `
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                 `;
-            } else if (event.data === 0) { // Ended - Riavvia automaticamente
-                event.target.playVideo();
+                // Se il video è finito, riavvialo automaticamente
+                if (event.data === 0) {
+                    setTimeout(() => event.target.playVideo(), 100);
+                }
             }
         }
 
         // Toggle play/pause
         function togglePlayPause() {
-            const button = document.getElementById('play-pause-toggle');
             if (youtubePlayer && youtubePlayer.getPlayerState) {
-                if (isPlaying) {
+                const currentState = youtubePlayer.getPlayerState();
+                // Se il video sta suonando (1) o è in buffering (3), metti in pausa
+                if (currentState === 1 || currentState === 3) {
                     youtubePlayer.pauseVideo();
-                    isPlaying = false;
-                    button.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    `;
+                    shouldAutoplay = false;
+                    localStorage.setItem('musicAutoplay', 'false');
                 } else {
+                    // Altrimenti avvia il video
                     youtubePlayer.playVideo();
-                    isPlaying = true;
-                    button.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="6" y="4" width="4" height="16"></rect>
-                            <rect x="14" y="4" width="4" height="16"></rect>
-                        </svg>
-                    `;
+                    shouldAutoplay = true;
+                    localStorage.setItem('musicAutoplay', 'true');
                 }
+                // L'icona verrà aggiornata automaticamente da onPlayerStateChange
             }
         }
 
