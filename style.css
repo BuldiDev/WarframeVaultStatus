@@ -339,9 +339,46 @@ button:hover {
     border-left-color: #2a2a2a;
 }
 
-.common { border-left-color: #999; }
-.uncommon { border-left-color: #666; }
-.rare { border-left-color: #2a2a2a; font-weight: 400; }
+.common { border-left-color: #8B4513; }
+.uncommon { border-left-color: #C0C0C0; }
+.rare { border-left-color: #DAA520; font-weight: 400; }
+
+/* Stili per la ricerca item */
+.item-relic-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.relic-name-link {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #2a2a2a;
+    font-weight: 400;
+    transition: color 0.2s;
+}
+
+.relic-name-link:hover {
+    color: #000;
+}
+
+.relic-rarity {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.relic-status {
+    margin-left: auto;
+    font-size: 0.75em;
+    letter-spacing: 1px;
+}
+
+.suggestion-icon {
+    display: inline-block;
+    width: 20px;
+    font-size: 1em;
+}
 
 /* Loading/Error */
 .loading, .error {

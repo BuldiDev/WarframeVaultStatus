@@ -21,13 +21,13 @@
     
     <div id="app">
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search relic..." autocomplete="off">
-            <button onclick="searchRelic()">Search</button>
+            <input type="text" id="searchInput" placeholder="Search relic or item..." autocomplete="off">
+            <button onclick="performSearch()">Search</button>
             <div id="suggestions"></div>
         </div>
         
         <div class="left-panel">
-            <h3>Relic Details</h3>
+            <h3>Details</h3>
             <div id="result"></div>
         </div>
         
@@ -47,6 +47,7 @@
         let relicDatabase = {};
         let vaultedRelics = [];
         let activeRelics = [];
+        let itemDatabase = {}; // Mappa item->reliquie
 
         // Load data on startup
         window.addEventListener('DOMContentLoaded', async () => {
@@ -139,6 +140,19 @@
                     Drops: drops
                 };
                 
+                // Aggiungi al database degli item
+                drops.forEach(drop => {
+                    const itemKey = `${drop.Item}${drop.Part ? ' - ' + drop.Part : ''}`;
+                    if (!itemDatabase[itemKey]) {
+                        itemDatabase[itemKey] = [];
+                    }
+                    itemDatabase[itemKey].push({
+                        relicName: relicName,
+                        rarity: drop.Rarity,
+                        vaulted: vaultedMatch ? vaultedMatch[1] : null
+                    });
+                });
+                
                 if (vaultedMatch) {
                     vaultedRelics.push(relicName);
                 } else {
@@ -150,12 +164,12 @@
             
         }
 
-        function searchRelic() {
+        function performSearch() {
             const input = document.getElementById('searchInput').value.trim();
             const resultDiv = document.getElementById('result');
             
             if (!input) {
-                resultDiv.innerHTML = '<div class="error"> Enter a relic name</div>';
+                resultDiv.innerHTML = '<div class="error">Enter a relic name or item</div>';
                 return;
             }
             
@@ -165,25 +179,105 @@
                 return;
             }
             
-            // Case-insensitive search - exact match first
+            // Cerca prima nelle reliquie
             let relicKey = Object.keys(relicDatabase).find(key => 
                 key.toLowerCase() === input.toLowerCase()
             );
             
-            // If no exact match found, search for first containing the text
             if (!relicKey) {
                 relicKey = Object.keys(relicDatabase).find(key => 
                     key.toLowerCase().includes(input.toLowerCase())
                 );
             }
             
-            if (!relicKey) {
-                resultDiv.innerHTML = `<div class="error">Relic "${input}" not found in database</div>`;
+            // Se trovata una reliquia, mostrala
+            if (relicKey) {
+                const relic = relicDatabase[relicKey];
+                displayRelicDetails(relic);
                 return;
             }
             
-            const relic = relicDatabase[relicKey];
-            displayRelicDetails(relic);
+            // Altrimenti cerca negli item
+            searchItem(input);
+        }
+        
+        function searchRelic() {
+            performSearch();
+        }
+        
+        function searchItem(input) {
+            const resultDiv = document.getElementById('result');
+            const inputLower = input.toLowerCase();
+            
+            // Cerca item che contengono la stringa
+            const matchingItems = Object.keys(itemDatabase).filter(item => 
+                item.toLowerCase().includes(inputLower)
+            );
+            
+            if (matchingItems.length === 0) {
+                resultDiv.innerHTML = `<div class="error">Relic or item "${input}" not found</div>`;
+                return;
+            }
+            
+            // Se c'è un match esatto, usa quello, altrimenti usa il primo match
+            let selectedItem = matchingItems.find(item => 
+                item.toLowerCase() === inputLower
+            ) || matchingItems[0];
+            
+            displayItemDetails(selectedItem);
+        }
+        
+        function displayItemDetails(itemName) {
+            const resultDiv = document.getElementById('result');
+            const relics = itemDatabase[itemName];
+            
+            let html = `
+                <div class="result">
+                    <h2>${itemName}</h2>
+                    <div class="relic-details">
+                        <h3>Found in relics:</h3>
+                        <ul class="drop-list">
+            `;
+            
+            // Ordina le reliquie per tier e poi per nome
+            const sortedRelics = [...relics].sort((a, b) => {
+                const tierOrder = { 'Lith': 1, 'Meso': 2, 'Neo': 3, 'Axi': 4 };
+                const tierA = relicDatabase[a.relicName]?.Tier || '';
+                const tierB = relicDatabase[b.relicName]?.Tier || '';
+                
+                if (tierOrder[tierA] !== tierOrder[tierB]) {
+                    return tierOrder[tierA] - tierOrder[tierB];
+                }
+                
+                return a.relicName.localeCompare(b.relicName);
+            });
+            
+            sortedRelics.forEach(relicInfo => {
+                const rarityClass = relicInfo.rarity.toLowerCase();
+                const vaultStatus = relicInfo.vaulted 
+                    ? `<span class="vaulted">VAULTED</span>`
+                    : `<span class="active">ACTIVE</span>`;
+                
+                html += `
+                    <li class="drop-item ${rarityClass}">
+                        <div class="item-relic-info">
+                            <span class="relic-name-link" onclick="selectAndSearch('${relicInfo.relicName}')">
+                                ${relicInfo.relicName}
+                            </span>
+                            <span class="relic-rarity">(${relicInfo.rarity})</span>
+                            <span class="relic-status">${vaultStatus}</span>
+                        </div>
+                    </li>
+                `;
+            });
+            
+            html += `
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = html;
         }
 
         function displayRelicDetails(relic) {
@@ -255,9 +349,18 @@
                 return;
             }
             
-            const matches = Object.keys(relicDatabase)
+            // Cerca sia nelle reliquie che negli item
+            const relicMatches = Object.keys(relicDatabase)
                 .filter(name => name.toLowerCase().includes(value))
-                .slice(0, 10);
+                .slice(0, 5)
+                .map(name => ({ name, type: 'relic' }));
+            
+            const itemMatches = Object.keys(itemDatabase)
+                .filter(name => name.toLowerCase().includes(value))
+                .slice(0, 5)
+                .map(name => ({ name, type: 'item' }));
+            
+            const matches = [...relicMatches, ...itemMatches].slice(0, 10);
             
             if (matches.length === 0) {
                 suggestionsDiv.style.display = 'none';
@@ -265,7 +368,9 @@
             }
             
             suggestionsDiv.innerHTML = matches
-                .map(name => `<div class="suggestion-item" onclick="selectRelic('${name}')">${name}</div>`)
+                .map(match => {
+                    return `<div class="suggestion-item" onclick="selectSuggestion('${match.name.replace(/'/g, "\\'")}')"> ${match.name}</div>`;
+                })
                 .join('');
             suggestionsDiv.style.display = 'block';
         });
@@ -273,7 +378,13 @@
         function selectRelic(name) {
             document.getElementById('searchInput').value = name;
             document.getElementById('suggestions').style.display = 'none';
-            searchRelic();
+            performSearch();
+        }
+        
+        function selectSuggestion(name) {
+            document.getElementById('searchInput').value = name;
+            document.getElementById('suggestions').style.display = 'none';
+            performSearch();
         }
 
         // Close suggestions when clicking outside
@@ -286,7 +397,7 @@
         // Press Enter to search
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                searchRelic();
+                performSearch();
             }
         });
     </script>
