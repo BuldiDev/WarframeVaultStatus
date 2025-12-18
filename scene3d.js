@@ -56,7 +56,7 @@ export function init3DScene() {
         requestAnimationFrame(animate);
         
         if (logo) {
-            logo.rotation.y += 0.005;
+            logo.rotation.y += 0.003;
         }
         
         renderer.render(scene, camera);
