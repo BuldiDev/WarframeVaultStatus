@@ -46,6 +46,36 @@
         <p>Data sourced from <a href="https://warframe.fandom.com/wiki/Void_Relic" target="_blank" rel="noopener noreferrer">Warframe Wiki</a></p>
     </footer>
 
+    <!-- YouTube Music Player -->
+    <div id="music-player">
+        <div id="player-header">
+            <span>MUSIC</span>
+            <div class="player-controls">
+                <button id="play-pause-toggle" onclick="togglePlayPause()" title="Play/Pause">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                </button>
+                <button id="audio-toggle" onclick="toggleAudio()" title="Mute/Unmute">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                </button>
+                <button id="expand-toggle" onclick="toggleExpand()" title="Show/Hide Video">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="player-container" style="display: none;">
+            <div id="youtube-player"></div>
+        </div>
+    </div>
+
     <script type="module">
         import { init3DScene } from './scene3d.js';
         init3DScene();
@@ -56,6 +86,179 @@
         let activeRelics = [];
         let itemDatabase = {}; // Mappa item->reliquie
         let currentRelicsView = 'active'; // 'active' o 'vaulted'
+        let youtubePlayer = null;
+        let isMuted = localStorage.getItem('musicMuted') === 'true' || false;
+        let isExpanded = localStorage.getItem('musicExpanded') === 'true' || false;
+        let isPlaying = false; // Parte da false, poi diventa true quando inizia
+
+        // YouTube API ready callback
+        function onYouTubeIframeAPIReady() {
+            youtubePlayer = new YT.Player('youtube-player', {
+                videoId: 'yPKo04oNQ9k',
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 1,
+                    'loop': 1,
+                    'playlist': 'yPKo04oNQ9k',
+                    'modestbranding': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            // Imposta volume basso
+            event.target.setVolume(15);
+            
+            // Ripristina stato mute da localStorage e applica
+            if (isMuted) {
+                event.target.mute();
+            }
+            
+            // Avvia SEMPRE il video al caricamento, indipendentemente dallo stato salvato
+            setTimeout(() => {
+                event.target.playVideo();
+                isPlaying = true;
+            }, 100);
+            
+            // Ripristina stato espansione
+            if (isExpanded) {
+                const container = document.getElementById('player-container');
+                const button = document.getElementById('expand-toggle');
+                container.style.display = 'block';
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                `;
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            const button = document.getElementById('play-pause-toggle');
+            // YT.PlayerState.PLAYING = 1, YT.PlayerState.PAUSED = 2
+            if (event.data === 1) { // Playing
+                isPlaying = true;
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                `;
+            } else if (event.data === 2 || event.data === 5) { // Paused or Cued
+                isPlaying = false;
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                `;
+            }
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            const button = document.getElementById('play-pause-toggle');
+            if (youtubePlayer && youtubePlayer.getPlayerState) {
+                if (isPlaying) {
+                    youtubePlayer.pauseVideo();
+                    isPlaying = false;
+                    button.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    `;
+                } else {
+                    youtubePlayer.playVideo();
+                    isPlaying = true;
+                    button.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    `;
+                }
+            }
+        }
+
+        // Toggle video visibility
+        function toggleExpand() {
+            const container = document.getElementById('player-container');
+            const button = document.getElementById('expand-toggle');
+            isExpanded = !isExpanded;
+            
+            // Salva preferenza
+            localStorage.setItem('musicExpanded', isExpanded);
+            
+            if (isExpanded) {
+                container.style.display = 'block';
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                `;
+            } else {
+                container.style.display = 'none';
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                `;
+            }
+        }
+
+        // Toggle audio mute/unmute
+        function toggleAudio() {
+            const button = document.getElementById('audio-toggle');
+            if (youtubePlayer && youtubePlayer.isMuted !== undefined) {
+                if (isMuted) {
+                    youtubePlayer.unMute();
+                    isMuted = false;
+                    localStorage.setItem('musicMuted', 'false');
+                    button.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                    `;
+                } else {
+                    youtubePlayer.mute();
+                    isMuted = true;
+                    localStorage.setItem('musicMuted', 'true');
+                    button.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <line x1="23" y1="9" x2="17" y2="15"></line>
+                            <line x1="17" y1="9" x2="23" y2="15"></line>
+                        </svg>
+                    `;
+                }
+            }
+        }
+
+        // Ripristina icona mute all'avvio
+        window.addEventListener('DOMContentLoaded', () => {
+            if (isMuted) {
+                const button = document.getElementById('audio-toggle');
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                    </svg>
+                `;
+            }
+        });
+
+        // Load YouTube API
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         // Load data on startup
         window.addEventListener('DOMContentLoaded', async () => {

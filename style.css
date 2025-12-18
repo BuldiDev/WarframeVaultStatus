@@ -770,6 +770,80 @@ button:hover {
     }
 }
 
+/* YouTube Music Player */
+#music-player {
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    background: white;
+    border: 1px solid #2a2a2a;
+    z-index: 1000;
+    width: 350px;
+}
 
+#player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+}
 
+#player-header span {
+    font-size: 0.7em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #2a2a2a;
+}
 
+.player-controls {
+    display: flex;
+    gap: 8px;
+}
+
+#audio-toggle,
+#expand-toggle,
+#play-pause-toggle {
+    padding: 5px 8px;
+    border: 1px solid #2a2a2a;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#audio-toggle:hover,
+#expand-toggle:hover,
+#play-pause-toggle:hover {
+    background: #2a2a2a;
+    color: white;
+}
+
+#audio-toggle svg,
+#expand-toggle svg,
+#play-pause-toggle svg {
+    display: block;
+}
+
+#player-container {
+    border-top: 1px solid #2a2a2a;
+}
+
+#youtube-player {
+    width: 100%;
+    height: 200px;
+}
+
+@media (max-width: 768px) {
+    #music-player {
+        top: 10px;
+        left: 10px;
+        width: 280px;
+    }
+    
+    #player-container iframe {
+        height: 160px;
+    }
+}
