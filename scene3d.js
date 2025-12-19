@@ -10,6 +10,8 @@ let previousMouseY = 0;
 let velocityX = 0;
 let velocityY = 0;
 let momentum = true;
+let autoRotateDirection = 1; // 1 per orario, -1 per antiorario
+let returnToDefault = false; // Ritorna alla rotazione di default
 let currentModelPath = 'logo.glb'; // Tiene traccia del modello attualmente caricato
 
 export function init3DScene() {
@@ -90,8 +92,18 @@ export function init3DScene() {
     document.addEventListener('mouseup', () => {
         if (isDragging) {
             isDragging = false;
-            momentum = true;
-            // Non più timeout, la convergenza avviene automaticamente
+            
+            // Se la velocità è molto bassa, attiva il ritorno alla posizione default
+            if (Math.abs(velocityX) < 0.002 && Math.abs(velocityY) < 0.002) {
+                velocityX = 0;
+                velocityY = 0;
+                momentum = false;
+                autoRotate = false;
+                returnToDefault = true;
+            } else {
+                momentum = true;
+                returnToDefault = false;
+            }
         }
     });
     
@@ -134,8 +146,18 @@ export function init3DScene() {
     document.addEventListener('touchend', () => {
         if (isDragging) {
             isDragging = false;
-            momentum = true;
-            // Non più timeout, la convergenza avviene automaticamente
+            
+            // Se la velocità è molto bassa, attiva il ritorno alla posizione default
+            if (Math.abs(velocityX) < 0.002 && Math.abs(velocityY) < 0.002) {
+                velocityX = 0;
+                velocityY = 0;
+                momentum = false;
+                autoRotate = false;
+                returnToDefault = true;
+            } else {
+                momentum = true;
+                returnToDefault = false;
+            }
         }
     });
     
@@ -246,20 +268,30 @@ export function init3DScene() {
     // Animation loop
     const autoRotateSpeed = 0.005;
     
+    // Funzione per normalizzare gli angoli tra 0 e 2π
+    function normalizeAngle(angle) {
+        const TWO_PI = Math.PI * 2;
+        angle = angle % TWO_PI;
+        if (angle < 0) angle += TWO_PI;
+        return angle;
+    }
+    
     function animate() {
         requestAnimationFrame(animate);
         
         if (logo) {
             if (autoRotate) {
-                // Rotazione automatica solo sull'asse Y
-                logo.rotation.y += autoRotateSpeed;
+                // Rotazione automatica solo sull'asse Y nella direzione memorizzata
+                logo.rotation.y += autoRotateSpeed * autoRotateDirection;
             } else if (momentum) {
                 // Applica il momentum
                 logo.rotation.y += velocityX;
                 logo.rotation.x += velocityY;
                 
                 // Convergi gradualmente verso la velocità di autorotazione sull'asse Y
-                const targetSpeed = autoRotateSpeed;
+                // Determina la direzione in base alla velocità corrente
+                autoRotateDirection = velocityX >= 0 ? 1 : -1;
+                const targetSpeed = autoRotateSpeed * autoRotateDirection;
                 const convergenceRate = 0.02;
                 
                 if (Math.abs(velocityX - targetSpeed) > 0.0001) {
@@ -281,7 +313,41 @@ export function init3DScene() {
                 if (Math.abs(velocityY) < 0.0001) {
                     velocityY = 0;
                 }
+            } else if (returnToDefault) {
+                // Convergi verso la rotazione di default (0, 0, 0)
+                const convergenceRate = 0.05;
+                
+                // Normalizza gli angoli per trovare il percorso più breve verso 0
+                const normalizedY = normalizeAngle(logo.rotation.y);
+                const normalizedX = normalizeAngle(logo.rotation.x);
+                
+                // Trova il percorso più breve verso 0
+                let deltaY = 0 - normalizedY;
+                let deltaX = 0 - normalizedX;
+                
+                // Aggiusta per il percorso più breve (può essere nella direzione opposta)
+                if (deltaY > Math.PI) deltaY -= Math.PI * 2;
+                if (deltaY < -Math.PI) deltaY += Math.PI * 2;
+                if (deltaX > Math.PI) deltaX -= Math.PI * 2;
+                if (deltaX < -Math.PI) deltaX += Math.PI * 2;
+                
+                // Applica la convergenza
+                logo.rotation.y += deltaY * convergenceRate;
+                logo.rotation.x += deltaX * convergenceRate;
+                
+                // Se abbastanza vicino a 0, imposta esattamente a 0 e rimane fermo
+                if (Math.abs(deltaY) < 0.01 && Math.abs(deltaX) < 0.01) {
+                    logo.rotation.y = 0;
+                    logo.rotation.x = 0;
+                    logo.rotation.z = 0;
+                    returnToDefault = false;
+                }
             }
+            
+            // Normalizza le rotazioni per mantenerle in un range gestibile
+            logo.rotation.y = normalizeAngle(logo.rotation.y);
+            logo.rotation.x = normalizeAngle(logo.rotation.x);
+            logo.rotation.z = normalizeAngle(logo.rotation.z);
         }
         
         // Animate background particles
