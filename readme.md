@@ -2,7 +2,7 @@
 
 A web tool to check Warframe Void Relics status and market prices.
 
-**Live Demo:**  https://buldidev.github.io/WarframeVaultStatus//
+**Live Demo:**  https://buldidev.github.io/WarframeVaultStatus/
 
 **Support:** https://buymeacoffee.com/buldidev
 
