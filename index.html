@@ -58,12 +58,6 @@
         <div id="player-header">
             <span>MUSIC</span>
             <div class="player-controls">
-                <button id="play-pause-toggle" onclick="togglePlayPause()" title="Play/Pause">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>
-                </button>
                 <button id="audio-toggle" onclick="toggleAudio()" title="Mute/Unmute">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -71,6 +65,7 @@
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
                     </svg>
                 </button>
+                <input type="range" id="volume-slider" min="0" max="100" value="50" title="Volume">
                 <button id="expand-toggle" onclick="toggleExpand()" title="Show/Hide Video">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -126,22 +121,14 @@
         }
 
         function onPlayerReady(event) {
-            // Imposta volume basso
-            event.target.setVolume(15);
+            // Imposta volume salvato o default
+            const savedVolume = localStorage.getItem('musicVolume') || '50';
+            event.target.setVolume(parseInt(savedVolume));
             
             // Ripristina stato mute da localStorage e applica
             if (isMuted) {
                 event.target.mute();
             }
-            
-            // Imposta icona iniziale come play (video non ancora partito)
-            const button = document.getElementById('play-pause-toggle');
-            button.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-            `;
-            isPlaying = false;
             
             // Ripristina stato espansione
             if (isExpanded) {
@@ -162,42 +149,15 @@
         }
 
         function onPlayerStateChange(event) {
-            const button = document.getElementById('play-pause-toggle');
             // YT.PlayerState.UNSTARTED = -1, ENDED = 0, PLAYING = 1, PAUSED = 2, BUFFERING = 3, CUED = 5
             if (event.data === 1) { // Playing
                 isPlaying = true;
-                button.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="6" y="4" width="4" height="16"></rect>
-                        <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>
-                `;
-            } else if (event.data === 2 || event.data === 5 || event.data === -1 || event.data === 0) { // Paused, Cued, Unstarted, or Ended
+            } else { // Paused, Cued, Unstarted, or Ended
                 isPlaying = false;
-                button.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                `;
                 // Se il video è finito, riavvialo automaticamente
                 if (event.data === 0) {
                     setTimeout(() => event.target.playVideo(), 100);
                 }
-            }
-        }
-
-        // Toggle play/pause
-        function togglePlayPause() {
-            if (youtubePlayer && youtubePlayer.getPlayerState) {
-                const currentState = youtubePlayer.getPlayerState();
-                // Se il video sta suonando (1) o è in buffering (3), metti in pausa
-                if (currentState === 1 || currentState === 3) {
-                    youtubePlayer.pauseVideo();
-                } else {
-                    // Altrimenti avvia il video
-                    youtubePlayer.playVideo();
-                }
-                // L'icona verrà aggiornata automaticamente da onPlayerStateChange
             }
         }
 
@@ -256,6 +216,34 @@
                 }
             }
         }
+        
+        // Gestione volume slider
+        const volumeSlider = document.getElementById('volume-slider');
+        const savedVolume = localStorage.getItem('musicVolume') || '50';
+        volumeSlider.value = savedVolume;
+        
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value;
+            if (youtubePlayer && youtubePlayer.setVolume) {
+                youtubePlayer.setVolume(volume);
+                localStorage.setItem('musicVolume', volume);
+                
+                // Se il volume è > 0 e il player era mutato, smuta automaticamente
+                if (volume > 0 && isMuted) {
+                    youtubePlayer.unMute();
+                    isMuted = false;
+                    localStorage.setItem('musicMuted', 'false');
+                    const button = document.getElementById('audio-toggle');
+                    button.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                    `;
+                }
+            }
+        });
 
         // Ripristina icona mute all'avvio
         window.addEventListener('DOMContentLoaded', () => {

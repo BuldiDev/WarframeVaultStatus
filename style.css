@@ -891,8 +891,7 @@ button:hover {
 }
 
 #audio-toggle,
-#expand-toggle,
-#play-pause-toggle {
+#expand-toggle {
     padding: 5px 8px;
     border: 1px solid #2a2a2a;
     background: white;
@@ -904,16 +903,69 @@ button:hover {
 }
 
 #audio-toggle:hover,
-#expand-toggle:hover,
-#play-pause-toggle:hover {
+#expand-toggle:hover {
     background: #2a2a2a;
     color: white;
 }
 
 #audio-toggle svg,
-#expand-toggle svg,
-#play-pause-toggle svg {
+#expand-toggle svg {
     display: block;
+}
+
+#volume-slider {
+    width: 120px;
+    height: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    align-self: center;
+}
+
+#volume-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #2a2a2a;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s;
+    margin-top: -5px;
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+    background: #000;
+}
+
+#volume-slider::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    border: none;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #2a2a2a;
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+    transition: background 0.2s;
+}
+
+#volume-slider::-moz-range-thumb:hover {
+    background: #000;
 }
 
 #player-container {
@@ -980,8 +1032,7 @@ button:hover {
     }
 
     #audio-toggle,
-    #expand-toggle,
-    #play-pause-toggle {
+    #expand-toggle {
         padding: 6px 9px;
     }
 
@@ -1042,14 +1093,16 @@ button:hover {
     }
 
     #audio-toggle,
-    #expand-toggle,
-    #play-pause-toggle {
+    #expand-toggle {
         padding: 5px 8px;
+    }
+    
+    #volume-slider {
+        width: 60px;
     }
 
     #audio-toggle svg,
-    #expand-toggle svg,
-    #play-pause-toggle svg {
+    #expand-toggle svg {
         width: 18px;
         height: 18px;
     }
@@ -1097,14 +1150,16 @@ button:hover {
     }
 
     #audio-toggle,
-    #expand-toggle,
-    #play-pause-toggle {
+    #expand-toggle {
         padding: 4px 6px;
+    }
+    
+    #volume-slider {
+        display: none;
     }
 
     #audio-toggle svg,
-    #expand-toggle svg,
-    #play-pause-toggle svg {
+    #expand-toggle svg {
         width: 16px;
         height: 16px;
     }
@@ -1118,10 +1173,11 @@ button:hover {
         left: 10px;
         right: 190px;
         bottom: 10px;
-        padding: 8px 10px;
+        padding: 6px 8px;
     }
 
     .footer p {
-        font-size: 0.6em;
+        font-size: 0.55em;
+        line-height: 1.3;
     }
 }
