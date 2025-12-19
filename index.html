@@ -44,6 +44,7 @@
 
     <footer class="footer">
         <p>Data sourced from <a href="https://warframe.fandom.com/wiki/Void_Relic" target="_blank" rel="noopener noreferrer">Warframe Wiki</a></p>
+        <p>Market prices from <a href="https://warframe.market/" target="_blank" rel="noopener noreferrer">Warframe Market</a></p>
     </footer>
 
     <!-- Support Banner -->
@@ -461,7 +462,63 @@
             displayItemDetails(selectedItem);
         }
         
-        function displayItemDetails(itemName) {
+        // Funzione per convertire il nome dell'item in slug per l'API di Warframe Market
+        function itemNameToSlug(itemName) {
+            // Rimuovi spazi extra e converti in lowercase
+            let slug = itemName.trim().toLowerCase();
+            
+            // Controlla se è una reliquia (inizia con Lith, Meso, Neo, Axi)
+            const isRelic = /^(lith|meso|neo|axi)\s+/i.test(itemName);
+            
+            // Gestisci le parti comuni (es: "Ash - Blueprint" -> "ash_blueprint")
+            slug = slug
+                .replace(/\s*-\s*/g, '_')  // Sostituisci " - " con "_"
+                .replace(/\s+/g, '_')       // Sostituisci spazi con underscore
+                .replace(/['']/g, '')       // Rimuovi apostrofi
+                .replace(/[^a-z0-9_-]/g, ''); // Rimuovi caratteri speciali
+            
+            // Aggiungi "_relic" alla fine se è una reliquia
+            if (isRelic) {
+                slug += '_relic';
+            }
+            
+            return slug;
+        }
+        
+        // Funzione per recuperare il prezzo più basso dall'API di Warframe Market
+        async function getLowestPrice(itemName) {
+            try {
+                const slug = itemNameToSlug(itemName);
+                // Usa un proxy CORS per bypassare le restrizioni CORS
+                const proxyUrl = 'https://corsproxy.io/?';
+                const apiUrl = `https://api.warframe.market/v2/orders/item/${slug}/top`;
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                    headers: {
+                        'Platform': 'pc'
+                    }
+                });
+                
+                if (!response.ok) {
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                // Ottieni l'ordine di vendita con il prezzo più basso
+                if (data.data && data.data.sell && data.data.sell.length > 0) {
+                    const lowestSellOrder = data.data.sell[0];
+                    return lowestSellOrder.platinum;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Errore nel recupero del prezzo:', error);
+                return null;
+            }
+        }
+
+        async function displayItemDetails(itemName) {
             const resultDiv = document.getElementById('result');
             const relics = itemDatabase[itemName];
             
@@ -476,10 +533,12 @@
                 ? `<span class="active">ACTIVE</span>`
                 : `<span class="vaulted">VAULTED</span>`;
             
+            // Mostra prima i dettagli con un indicatore di caricamento per il prezzo
             let html = `
                 <div class="result">
                     <h2>${itemName}</h2>
                     <p><strong>Status:</strong> ${itemStatus}</p>
+                    <p id="price-container"><strong>Lowest Market Price:</strong> <span class="price-loading">Loading...</span></p>
                     <div class="relic-details">
                         <h3>Found in relics:</h3>
                         <ul class="drop-list">
@@ -524,6 +583,18 @@
             `;
             
             resultDiv.innerHTML = html;
+            
+            // Recupera il prezzo dal mercato in modo asincrono
+            getLowestPrice(itemName).then(price => {
+                const priceContainer = document.getElementById('price-container');
+                if (priceContainer) {
+                    if (price !== null) {
+                        priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <span class="price-platinum">${price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span>`;
+                    } else {
+                        priceContainer.innerHTML = `<strong>Market Price:</strong> <span class="price-unavailable">Not available</span>`;
+                    }
+                }
+            });
         }
 
         function displayRelicDetails(relic) {
@@ -543,6 +614,7 @@
                     <p><strong>Tier:</strong> ${relic.Tier}</p>
                     <p><strong>Status:</strong> ${status}</p>
                     <p><strong>Introduced:</strong> ${relic.Introduced}</p>
+                    <p id="price-container"><strong>Lowest Market Price:</strong> <span class="price-loading">Loading...</span></p>
                     
                     <div class="relic-details">
                         <div class="content-header">
@@ -592,6 +664,18 @@
             `;
             
             resultDiv.innerHTML = html;
+            
+            // Recupera il prezzo dal mercato in modo asincrono
+            getLowestPrice(relic.Name).then(price => {
+                const priceContainer = document.getElementById('price-container');
+                if (priceContainer) {
+                    if (price !== null) {
+                        priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <span class="price-platinum">${price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span>`;
+                    } else {
+                        priceContainer.innerHTML = `<strong>Market Price:</strong> <span class="price-unavailable">Not available</span>`;
+                    }
+                }
+            });
         }
 
         function displayActiveRelics() {

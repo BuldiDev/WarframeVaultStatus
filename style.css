@@ -361,6 +361,38 @@ button:hover {
     font-weight: 400;
 }
 
+/* Prezzo di mercato */
+.price-platinum {
+    color: #b3b3b3;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.platinum-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.price-unavailable {
+    color: #999;
+    font-style: italic;
+}
+
+.price-loading {
+    color: #666;
+    font-style: italic;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* Drop list */
 .drop-list {
     list-style: none;
