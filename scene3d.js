@@ -21,6 +21,10 @@ export function init3DScene() {
     
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
+    
+    // Abilita il depth test per evitare glitch di rendering
+    renderer.sortObjects = true;
+    
     container.appendChild(renderer.domElement);
     
     // Lighting
@@ -326,6 +330,15 @@ function loadModel(modelPath) {
                                  modelPath.includes('axi.glb');
             const scale = isRelicModel ? 2.5 : 0.25;
             logo.scale.set(scale, scale, scale);
+            
+            // Correggi i materiali per evitare glitch di rendering
+            logo.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.side = THREE.FrontSide;
+                    child.material.depthWrite = true;
+                    child.material.depthTest = true;
+                }
+            });
             
             scene.add(logo);
             
