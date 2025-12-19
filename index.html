@@ -855,9 +855,27 @@
             if (helpIcon) {
                 const tooltip = helpIcon.nextElementSibling;
                 if (tooltip && tooltip.classList.contains('drop-guide-tooltip')) {
-                    const rect = helpIcon.getBoundingClientRect();
-                    tooltip.style.left = rect.left + 'px';
-                    tooltip.style.top = (rect.bottom + 5) + 'px';
+                    // Su mobile/tablet posiziona a sinistra rispetto al pannello sinistro
+                    if (window.innerWidth <= 1024) {
+                        const container = helpIcon.closest('.left-panel');
+                        if (container) {
+                            const containerRect = container.getBoundingClientRect();
+                            const iconRect = helpIcon.getBoundingClientRect();
+                            tooltip.style.position = 'fixed';
+                            tooltip.style.left = containerRect.left + 'px';
+                            tooltip.style.top = (iconRect.bottom + 5) + 'px';
+                            tooltip.style.right = 'auto';
+                            tooltip.style.maxWidth = (containerRect.width - 20) + 'px';
+                        }
+                    } else {
+                        // Su desktop usa posizionamento fixed
+                        tooltip.style.position = 'fixed';
+                        const rect = helpIcon.getBoundingClientRect();
+                        tooltip.style.left = rect.left + 'px';
+                        tooltip.style.top = (rect.bottom + 5) + 'px';
+                        tooltip.style.right = 'auto';
+                        tooltip.style.maxWidth = '';
+                    }
                 }
             }
         });
