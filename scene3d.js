@@ -27,13 +27,24 @@ export function init3DScene() {
     
     container.appendChild(renderer.domElement);
     
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    // Lighting - Sistema triplanar con tre luci direzionali ortogonali
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
     
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
+    // Luce principale (dall'alto-destra-fronte)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 5.5);
+    keyLight.position.set(5, 5, 5);
+    scene.add(keyLight);
+    
+    // Luce di riempimento (da sinistra)
+    const fillLight = new THREE.DirectionalLight(0x6699ff, 3.5);
+    fillLight.position.set(-5, 0, 3);
+    scene.add(fillLight);
+    
+    // Luce posteriore/rim (da dietro)
+    const rimLight = new THREE.DirectionalLight(0xff9966, 3.8);
+    rimLight.position.set(0, -3, -5);
+    scene.add(rimLight);
     
     camera.position.z = 10;
     
