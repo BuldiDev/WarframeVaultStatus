@@ -26,6 +26,12 @@
             <div id="suggestions"></div>
         </div>
         
+        <!-- Support Banner -->
+        <div id="support-banner" onclick="window.open('https://buymeacoffee.com/buldidev', '_blank')">
+            <img src="heart.png" alt="Support" class="support-image">
+            <span class="support-text">Support me to keep the site online</span>
+        </div>
+        
         <div class="left-panel">
             <h3>Details</h3>
             <div id="result"></div>
@@ -46,12 +52,6 @@
         <p>Data sourced from <a href="https://warframe.fandom.com/wiki/Void_Relic" target="_blank" rel="noopener noreferrer">Warframe Wiki</a></p>
         <p>Market prices from <a href="https://warframe.market/" target="_blank" rel="noopener noreferrer">Warframe Market</a></p>
     </footer>
-
-    <!-- Support Banner -->
-    <div id="support-banner" onclick="window.open('https://buymeacoffee.com/buldidev', '_blank')">
-        <img src="heart.png" alt="Support" class="support-image">
-        <span class="support-text">Support me to keep the site online</span>
-    </div>
 
     <!-- YouTube Music Player -->
     <div id="music-player">
@@ -489,6 +489,8 @@
         async function getLowestPrice(itemName) {
             try {
                 const slug = itemNameToSlug(itemName);
+                console.log(`Cercando prezzo per: ${itemName} -> slug: ${slug}`);
+                
                 // Usa un proxy CORS per bypassare le restrizioni CORS
                 const proxyUrl = 'https://corsproxy.io/?';
                 const apiUrl = `https://api.warframe.market/v2/orders/item/${slug}/top`;
@@ -499,23 +501,66 @@
                     }
                 });
                 
+                console.log(`Response status: ${response.status} per ${slug}`);
+                
                 if (!response.ok) {
+                    console.log(`Errore HTTP ${response.status} per ${slug}`);
                     return null;
                 }
                 
                 const data = await response.json();
+                console.log(`Dati ricevuti per ${slug}:`, data);
                 
                 // Ottieni l'ordine di vendita con il prezzo più basso
                 if (data.data && data.data.sell && data.data.sell.length > 0) {
                     const lowestSellOrder = data.data.sell[0];
-                    return lowestSellOrder.platinum;
+                    console.log(`Prezzo trovato per ${slug}: ${lowestSellOrder.platinum}`);
+                    return { price: lowestSellOrder.platinum, found: true };
                 }
                 
-                return null;
+                // L'item esiste ma non ci sono venditori online
+                if (data.data && data.data.sell) {
+                    console.log(`Nessun venditore online per ${slug}`);
+                    return { price: null, found: true, noSellers: true };
+                }
+                
+                console.log(`Item non trovato per ${slug}`);
+                return { price: null, found: false };
             } catch (error) {
                 console.error('Errore nel recupero del prezzo:', error);
-                return null;
+                return { price: null, found: false };
             }
+        }
+        
+        // Funzione per verificare se un item è tradabile su Warframe Market
+        function isTradableItem(itemName) {
+            const nonTradableItems = [
+                'forma',
+                'orokin cell',
+                'neurode',
+                'neural sensor',
+                'control module',
+                'morphic',
+                'gallium',
+                'plastid',
+                'polymer bundle',
+                'salvage',
+                'ferrite',
+                'nano spore',
+                'alloy plate',
+                'circuits',
+                'rubedo',
+                'argon crystal'
+            ];
+            
+            const lowerName = itemName.toLowerCase();
+            
+            // Controlla se l'item è nella lista dei non tradabili
+            if (nonTradableItems.some(item => lowerName.includes(item))) {
+                return false;
+            }
+            
+            return true;
         }
 
         async function displayItemDetails(itemName) {
@@ -533,12 +578,15 @@
                 ? `<span class="active">ACTIVE</span>`
                 : `<span class="vaulted">VAULTED</span>`;
             
-            // Mostra prima i dettagli con un indicatore di caricamento per il prezzo
+            // Verifica se l'item è tradabile
+            const tradable = isTradableItem(itemName);
+            
+            // Mostra prima i dettagli con un indicatore di caricamento per il prezzo (solo se tradabile)
             let html = `
                 <div class="result">
                     <h2>${itemName}</h2>
                     <p><strong>Status:</strong> ${itemStatus}</p>
-                    <p id="price-container"><strong>Lowest Market Price:</strong> <span class="price-loading">Loading...</span></p>
+                    ${tradable ? '<p id="price-container"><strong>Lowest Market Price:</strong> <span class="price-loading">Loading...</span></p>' : ''}
                     <div class="relic-details">
                         <h3>Found in relics:</h3>
                         <ul class="drop-list">
@@ -564,9 +612,9 @@
                     : `<span class="active">ACTIVE</span>`;
                 
                 html += `
-                    <li class="drop-item ${rarityClass}">
+                    <li class="drop-item ${rarityClass}" onclick="selectAndSearch('${relicInfo.relicName}')">
                         <div class="item-relic-info">
-                            <span class="relic-name-link" onclick="selectAndSearch('${relicInfo.relicName}')">
+                            <span class="relic-name-link">
                                 ${relicInfo.relicName}
                             </span>
                             <span class="relic-rarity">(${relicInfo.rarity})</span>
@@ -584,17 +632,25 @@
             
             resultDiv.innerHTML = html;
             
-            // Recupera il prezzo dal mercato in modo asincrono
-            getLowestPrice(itemName).then(price => {
-                const priceContainer = document.getElementById('price-container');
-                if (priceContainer) {
-                    if (price !== null) {
-                        priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <span class="price-platinum">${price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span>`;
-                    } else {
-                        priceContainer.innerHTML = `<strong>Market Price:</strong> <span class="price-unavailable">Not available</span>`;
+            // Recupera il prezzo dal mercato in modo asincrono (solo se tradabile)
+            if (tradable) {
+                getLowestPrice(itemName).then(result => {
+                    const priceContainer = document.getElementById('price-container');
+                    if (priceContainer) {
+                        if (result.price !== null) {
+                            const slug = itemNameToSlug(itemName);
+                            const marketUrl = `https://warframe.market/items/${slug}`;
+                            priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <a href="${marketUrl}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-platinum">${result.price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span></a>`;
+                        } else if (result.noSellers) {
+                            const slug = itemNameToSlug(itemName);
+                            const marketUrl = `https://warframe.market/items/${slug}`;
+                            priceContainer.innerHTML = `<strong>Market Price:</strong> <a href="${marketUrl}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-unavailable">No sellers online</span></a>`;
+                        } else {
+                            priceContainer.innerHTML = `<strong>Market Price:</strong> <span class="price-unavailable">Not available</span>`;
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         function displayRelicDetails(relic) {
@@ -666,11 +722,17 @@
             resultDiv.innerHTML = html;
             
             // Recupera il prezzo dal mercato in modo asincrono
-            getLowestPrice(relic.Name).then(price => {
+            getLowestPrice(relic.Name).then(result => {
                 const priceContainer = document.getElementById('price-container');
                 if (priceContainer) {
-                    if (price !== null) {
-                        priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <span class="price-platinum">${price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span>`;
+                    if (result.price !== null) {
+                        const slug = itemNameToSlug(relic.Name);
+                        const marketUrl = `https://warframe.market/items/${slug}`;
+                        priceContainer.innerHTML = `<strong>Lowest Market Price:</strong> <a href="${marketUrl}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-platinum">${result.price} <img src="Platinum.png" alt="platinum" class="platinum-icon"> platinum</span></a>`;
+                    } else if (result.noSellers) {
+                        const slug = itemNameToSlug(relic.Name);
+                        const marketUrl = `https://warframe.market/items/${slug}`;
+                        priceContainer.innerHTML = `<strong>Market Price:</strong> <a href="${marketUrl}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-unavailable">No sellers online</span></a>`;
                     } else {
                         priceContainer.innerHTML = `<strong>Market Price:</strong> <span class="price-unavailable">Not available</span>`;
                     }
@@ -785,6 +847,19 @@
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 performSearch();
+            }
+        });
+
+        // Posizionamento dinamico del tooltip drop chances
+        document.addEventListener('mouseover', (e) => {
+            const helpIcon = e.target.closest('.help-icon');
+            if (helpIcon) {
+                const tooltip = helpIcon.nextElementSibling;
+                if (tooltip && tooltip.classList.contains('drop-guide-tooltip')) {
+                    const rect = helpIcon.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.bottom + 5) + 'px';
+                }
             }
         });
     </script>

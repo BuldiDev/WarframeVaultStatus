@@ -362,6 +362,16 @@ button:hover {
 }
 
 /* Prezzo di mercato */
+.price-link {
+    text-decoration: underline;
+    display: inline-block;
+    transition: opacity 0.2s;
+}
+
+.price-link:hover {
+    opacity: 0.7;
+}
+
 .price-platinum {
     color: #b3b3b3;
     font-weight: 600;
@@ -462,15 +472,13 @@ button:hover {
 
 .drop-guide-tooltip {
     display: none;
-    position: absolute;
-    right: 0;
-    top: 28px;
+    position: fixed;
     min-width: 280px;
     padding: 12px 15px;
     background: white;
     border: 1px solid #2a2a2a;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 10000;
     font-size: 0.75em;
 }
 
@@ -677,10 +685,9 @@ button:hover {
         position: sticky;
         top: 15px;
         z-index: 10;
-        background: rgba(232, 232, 232, 0.95);
+        background: transparent;
         padding: 15px;
         border-radius: 4px;
-        backdrop-filter: blur(10px);
         flex-direction: column;
         margin-bottom: 0;
     }
@@ -994,20 +1001,22 @@ button:hover {
 /* Music Player - Mobile */
 @media screen and (max-width: 768px) {
     #support-banner {
-        width: 200px;
-        right: 10px;
-        top: 10px;
+        position: relative;
+        width: 100%;
+        right: auto;
+        top: auto;
         padding: 10px;
         gap: 10px;
+        margin-top: 10px;
     }
     
     .support-image {
-        width: 50px;
-        height: 50px;
+        width: 35px;
+        height: 35px;
     }
     
     .support-text {
-        font-size: 0.7em;
+        font-size: 0.75em;
         line-height: 1.3;
     }
     
