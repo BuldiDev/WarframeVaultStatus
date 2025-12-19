@@ -659,7 +659,7 @@ button:hover {
     align-items: center;
     gap: 15px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
     box-sizing: border-box;
 }
 
@@ -684,6 +684,7 @@ button:hover {
     font-weight: 700;
     flex: 1;
     letter-spacing: 0.5px;
+    text-align: right;
 }
 
 #music-player {
