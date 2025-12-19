@@ -544,6 +544,33 @@ button:hover {
     color: #000;
 }
 
+/* Legal Footer */
+.legal-footer {
+    position: relative;
+    width: 100%;
+    background: #f5f5f5;
+    border-top: 1px solid #d0d0d0;
+    padding: 30px 20px;
+    margin-top: 100vh;
+    z-index: 1;
+}
+
+.legal-content {
+    max-width: 800px;
+    margin: 0 auto 0 auto;
+    text-align: left;
+    margin-left: auto;
+    margin-left: 0;
+}
+
+.legal-content p {
+    margin: 8px 0;
+    font-size: 0.7em;
+    color: #666;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+}
+
 /* Stili per la ricerca item */
 .item-relic-info {
     display: flex;
@@ -755,12 +782,27 @@ button:hover {
         width: 200px;
         height: 200px;
     }
+    
+    .legal-footer {
+        padding: 15px 10px;
+        margin-top: 20px;
+    }
+    
+    .legal-content {
+        text-align: center;
+        padding: 0 5px;
+    }
+    
+    .legal-content p {
+        font-size: 0.6em;
+        margin: 5px 0;
+    }
 }
 
 /* ===== RESPONSIVE DESIGN - MOBILE SMALL ===== */
 @media screen and (max-width: 480px) {
     #app {
-        padding: 10px;
+        padding: 10px 10px 50px 10px;
         gap: 15px;
     }
 
