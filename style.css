@@ -15,7 +15,7 @@ body {
 /* Elementi decorativi ispirati all'immagine */
 body::before {
     content: '';
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -29,7 +29,7 @@ body::before {
 
 body::after {
     content: '';
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -43,7 +43,7 @@ body::after {
 
 /* Pattern di punti */
 .dots-pattern {
-    position: fixed;
+    position: absolute;
     width: 100px;
     height: 100px;
     background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 1px, transparent 1px);
