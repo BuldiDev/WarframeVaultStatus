@@ -1,12 +1,23 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+let scene, camera, renderer, logo, loader;
+let isDragging = false;
+let autoRotate = true;
+let dragTimeout = null;
+let previousMouseX = 0;
+let previousMouseY = 0;
+let velocityX = 0;
+let velocityY = 0;
+let momentum = true;
+let currentModelPath = 'logo.glb'; // Tiene traccia del modello attualmente caricato
+
 export function init3DScene() {
     const container = document.getElementById('scene-container');
     
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
@@ -21,16 +32,6 @@ export function init3DScene() {
     scene.add(directionalLight);
     
     camera.position.z = 10;
-    
-    // Controlli per drag del logo con momentum
-    let isDragging = false;
-    let autoRotate = true;
-    let dragTimeout = null;
-    let previousMouseX = 0;
-    let previousMouseY = 0;
-    let velocityX = 0;
-    let velocityY = 0;
-    let momentum = true;
     
     // Mouse/touch events per controllare il drag e la rotazione
     container.addEventListener('mousedown', (event) => {
@@ -222,32 +223,10 @@ export function init3DScene() {
     scene.add(particlesMesh);
     
     // Load logo
-    const loader = new GLTFLoader();
-    let logo;
+    loader = new GLTFLoader();
     
-    loader.load(
-        'logo.glb',
-        (gltf) => {
-            logo = gltf.scene;
-            
-            // Scala il logo ancora più piccolo
-            logo.scale.set(0.25, 0.25, 0.25);
-            
-            scene.add(logo);
-            
-            // Centra il logo
-            const box = new THREE.Box3().setFromObject(logo);
-            const center = box.getCenter(new THREE.Vector3());
-            logo.position.x = -center.x;
-            logo.position.y = -center.y;
-            logo.position.z = -center.z;
-            
-        },
-        undefined,
-        (error) => {
-            console.error('Errore caricamento logo:', error);
-        }
-    );
+    // Carica il modello di default
+    loadModel('logo.glb');
     
     // Animation loop
     const autoRotateSpeed = 0.005;
@@ -322,4 +301,76 @@ export function init3DScene() {
             particlesMaterial.uniforms.uBaseAlpha.value = a;
         }
     });
+}
+
+// Funzione per caricare un modello 3D
+function loadModel(modelPath) {
+    // Se c'è già un logo caricato, rimuovilo dalla scena
+    if (logo) {
+        scene.remove(logo);
+        logo = null;
+    }
+    
+    // Aggiorna il percorso del modello corrente
+    currentModelPath = modelPath;
+    
+    loader.load(
+        modelPath,
+        (gltf) => {
+            logo = gltf.scene;
+            
+            // Scala il modello: 10 per i modelli delle reliquie, 0.25 per il logo di default
+            const isRelicModel = modelPath.includes('lith.glb') || 
+                                 modelPath.includes('meso.glb') || 
+                                 modelPath.includes('neo.glb') || 
+                                 modelPath.includes('axi.glb');
+            const scale = isRelicModel ? 2.5 : 0.25;
+            logo.scale.set(scale, scale, scale);
+            
+            scene.add(logo);
+            
+            // Centra il modello
+            const box = new THREE.Box3().setFromObject(logo);
+            const center = box.getCenter(new THREE.Vector3());
+            logo.position.x = -center.x;
+            logo.position.y = -center.y;
+            logo.position.z = -center.z;
+            
+            // Ripristina la rotazione automatica
+            autoRotate = true;
+            momentum = false;
+        },
+        undefined,
+        (error) => {
+            console.error(`Errore caricamento modello ${modelPath}:`, error);
+            // Se il modello specifico non esiste, prova a caricare il default
+            if (modelPath !== 'logo.glb') {
+                console.log('Caricamento modello di default...');
+                loadModel('logo.glb');
+            }
+        }
+    );
+}
+
+// Funzione esportata per cambiare il modello in base al tier della reliquia
+export function changeModelByTier(tier) {
+    if (!tier) {
+        loadModel('logo.glb');
+        return;
+    }
+    
+    // Mappa il tier al nome del file del modello
+    const tierToModel = {
+        'Lith': 'lith.glb',
+        'Meso': 'meso.glb',
+        'Neo': 'neo.glb',
+        'Axi': 'axi.glb'
+    };
+    
+    const modelPath = tierToModel[tier] || 'logo.glb';
+    
+    // Carica il nuovo modello solo se è diverso da quello corrente
+    if (modelPath !== currentModelPath) {
+        loadModel(modelPath);
+    }
 }

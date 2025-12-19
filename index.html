@@ -77,8 +77,11 @@
     </div>
 
     <script type="module">
-        import { init3DScene } from './scene3d.js';
+        import { init3DScene, changeModelByTier } from './scene3d.js';
         init3DScene();
+        
+        // Rendi changeModelByTier disponibile globalmente
+        window.changeModelByTier = changeModelByTier;
     </script>
     <script>
         let relicDatabase = {};
@@ -509,6 +512,11 @@
             const status = relic.Vaulted 
                 ? `<span class="vaulted">VAULTED</span> (since ${relic.Vaulted})`
                 : `<span class="active">ACTIVE</span>`;
+            
+            // Cambia il modello 3D in base al tier della reliquia
+            if (window.changeModelByTier) {
+                window.changeModelByTier(relic.Tier);
+            }
             
             let html = `
                 <div class="result">
