@@ -77,11 +77,12 @@
     </div>
 
     <script type="module">
-        import { init3DScene, changeModelByTier } from './scene3d.js';
+        import { init3DScene, changeModelByTier, loadBlueprintImage } from './scene3d.js';
         init3DScene();
         
-        // Rendi changeModelByTier disponibile globalmente
+        // Rendi le funzioni disponibili globalmente
         window.changeModelByTier = changeModelByTier;
+        window.loadBlueprintImage = loadBlueprintImage;
     </script>
     <script>
         let relicDatabase = {};
@@ -399,6 +400,13 @@
                 return;
             }
             
+            // Se l'input contiene " - " è probabilmente un item (es: "Nova Prime - Blueprint")
+            // Cerca prima negli item
+            if (input.includes(' - ')) {
+                searchItem(input);
+                return;
+            }
+            
             // Cerca prima nelle reliquie
             let relicKey = Object.keys(relicDatabase).find(key => 
                 key.toLowerCase() === input.toLowerCase()
@@ -450,6 +458,11 @@
         function displayItemDetails(itemName) {
             const resultDiv = document.getElementById('result');
             const relics = itemDatabase[itemName];
+            
+            // Carica l'immagine blueprint per gli item
+            if (window.loadBlueprintImage) {
+                window.loadBlueprintImage('blueprint.jpg');
+            }
             
             // Controlla se c'è almeno una reliquia attiva
             const hasActiveRelic = relics.some(r => !r.vaulted);

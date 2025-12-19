@@ -398,3 +398,56 @@ export function changeModelByTier(tier) {
         loadModel(modelPath);
     }
 }
+// Funzione per caricare il blueprint (immagine con spessore)
+export function loadBlueprintImage(imagePath = 'blueprint.jpg') {
+    // Se c'è già un logo caricato, rimuovilo dalla scena
+    if (logo) {
+        scene.remove(logo);
+        logo = null;
+    }
+    
+    // Aggiorna il percorso del modello corrente
+    currentModelPath = imagePath;
+    
+    // Carica la texture
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(
+        imagePath,
+        (texture) => {
+            // Crea una geometria con spessore (BoxGeometry)
+            const aspect = texture.image.width / texture.image.height;
+            const width = 6;
+            const height = width / aspect;
+            const depth = 0.05; // Spessore del blueprint
+            
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            
+            // Crea materiali per ogni faccia
+            const materials = [
+                new THREE.MeshStandardMaterial({ color: 0x1a4d7a }), // Lato destro
+                new THREE.MeshStandardMaterial({ color: 0x1a4d7a }), // Lato sinistro
+                new THREE.MeshStandardMaterial({ color: 0x1a4d7a }), // Lato superiore
+                new THREE.MeshStandardMaterial({ color: 0x1a4d7a }), // Lato inferiore
+                new THREE.MeshStandardMaterial({ map: texture }), // Fronte - con texture
+                new THREE.MeshStandardMaterial({ map: texture })  // Retro - con texture
+            ];
+            
+            logo = new THREE.Mesh(geometry, materials);
+            
+            scene.add(logo);
+            
+            // Centra il blueprint
+            logo.position.set(0, 0, 0);
+            
+            // Ripristina la rotazione automatica
+            autoRotate = true;
+            momentum = false;
+        },
+        undefined,
+        (error) => {
+            console.error(`Errore caricamento immagine ${imagePath}:`, error);
+            // Se l'immagine non esiste, carica il logo di default
+            loadModel('logo.glb');
+        }
+    );
+}
