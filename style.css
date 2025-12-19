@@ -8,6 +8,7 @@ body {
     font-family: Arial, sans-serif;
     background: #e8e8e8;
     overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
 }
 
@@ -64,11 +65,11 @@ body::after {
 }
 
 #scene-container {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     z-index: 0;
 }
 
@@ -78,11 +79,11 @@ body::after {
 }
 
 #app {
-    position: fixed;
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     z-index: 1;
     display: grid;
     grid-template-columns: 350px 1fr 350px;
@@ -101,6 +102,7 @@ body::after {
     gap: 10px;
     margin-bottom: 40px;
     position: relative;
+    z-index: 1001;
     pointer-events: auto;
 }
 
@@ -515,8 +517,8 @@ button:hover {
 
 /* Footer */
 .footer {
-    position: fixed;
-    bottom: 20px;
+    position: absolute;
+    bottom: 140px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
@@ -551,7 +553,8 @@ button:hover {
     background: #f5f5f5;
     border-top: 1px solid #d0d0d0;
     padding: 30px 20px;
-    margin-top: 100vh;
+    margin-top: 60px;
+    margin-bottom: 80px;
     z-index: 1;
 }
 
@@ -640,227 +643,10 @@ button:hover {
     background: #2a2a2a;
 }
 
-/* ===== RESPONSIVE DESIGN - TABLET ===== */
-@media screen and (max-width: 1024px) {
-    #app {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto 1fr 1fr;
-        padding: 20px;
-        gap: 15px;
-    }
-
-    .search-container {
-        grid-column: 1 / -1;
-        grid-row: 1;
-    }
-
-    .left-panel {
-        grid-column: 1 / -1;
-        grid-row: 2;
-        max-height: 500px;
-    }
-
-    .center-area {
-        display: none;
-    }
-
-    .right-panel {
-        grid-column: 1 / -1;
-        grid-row: 3;
-        max-height: 400px;
-    }
-
-    input {
-        width: 250px;
-    }
-
-    .dots-left,
-    .dots-right {
-        display: none;
-    }
-
-    body::before,
-    body::after {
-        width: 300px;
-        height: 300px;
-    }
-}
-
-/* ===== RESPONSIVE DESIGN - MOBILE ===== */
-@media screen and (max-width: 768px) {
-    body {
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    #app {
-        position: relative;
-        height: auto;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        padding: 15px;
-        gap: 20px;
-    }
-
-    #scene-container {
-        position: absolute;
-        height: 100%;
-    }
-
-    .search-container {
-        position: sticky;
-        top: 15px;
-        z-index: 10;
-        background: transparent;
-        padding: 15px;
-        border-radius: 4px;
-        flex-direction: column;
-        margin-bottom: 0;
-    }
-
-    input {
-        width: 100%;
-        padding: 15px;
-        font-size: 16px;
-    }
-
-    button {
-        width: 100%;
-        padding: 15px;
-        font-size: 0.85em;
-    }
-
-    #suggestions {
-        width: 100%;
-        transform: none;
-        left: 0;
-        max-height: 200px;
-    }
-
-    .left-panel,
-    .right-panel {
-        position: relative;
-        width: 100%;
-        max-height: none;
-        min-height: 300px;
-        padding: 20px;
-    }
-
-    .left-panel h3,
-    .right-panel h3 {
-        font-size: 0.8em;
-        letter-spacing: 2px;
-    }
-
-    .result h2 {
-        font-size: 1.1em;
-        letter-spacing: 1.5px;
-    }
-
-    .result p {
-        font-size: 0.9em;
-    }
-
-    .drop-item {
-        font-size: 0.85em;
-        padding: 12px;
-    }
-
-    .relic-name {
-        font-size: 0.9em;
-        padding: 12px;
-    }
-
-    .dots-left,
-    .dots-right {
-        display: none;
-    }
-
-    body::before,
-    body::after {
-        width: 200px;
-        height: 200px;
-    }
-    
-    .legal-footer {
-        padding: 15px 10px;
-        margin-top: 20px;
-    }
-    
-    .legal-content {
-        text-align: center;
-        padding: 0 5px;
-    }
-    
-    .legal-content p {
-        font-size: 0.6em;
-        margin: 5px 0;
-    }
-}
-
-/* ===== RESPONSIVE DESIGN - MOBILE SMALL ===== */
-@media screen and (max-width: 480px) {
-    #app {
-        padding: 10px 10px 50px 10px;
-        gap: 15px;
-    }
-
-    .search-container {
-        top: 10px;
-        padding: 10px;
-    }
-
-    input {
-        padding: 12px;
-        font-size: 16px;
-    }
-
-    button {
-        padding: 12px;
-    }
-
-    .left-panel,
-    .right-panel {
-        padding: 15px;
-        min-height: 250px;
-    }
-
-    .left-panel h3,
-    .right-panel h3 {
-        font-size: 0.7em;
-        margin-bottom: 15px;
-    }
-
-    .result h2 {
-        font-size: 1em;
-        letter-spacing: 1px;
-    }
-
-    .result p {
-        font-size: 0.85em;
-    }
-
-    .drop-item {
-        font-size: 0.8em;
-        padding: 10px;
-    }
-
-    .relic-name {
-        font-size: 0.85em;
-        padding: 10px;
-    }
-
-    body::before,
-    body::after {
-        display: none;
-    }
-}
-
 /* YouTube Music Player */
 /* Support Banner */
 #support-banner {
-    position: fixed;
+    position: absolute;
     top: 40px;
     right: 40px;
     background: white;
@@ -901,7 +687,7 @@ button:hover {
 }
 
 #music-player {
-    position: fixed;
+    position: absolute;
     top: 40px;
     left: 40px;
     background: white;
@@ -1019,207 +805,189 @@ button:hover {
     height: 200px;
 }
 
-/* Stile per apertura verso l'alto su mobile */
+/* Media Queries per dispositivi mobili e tablet */
 @media screen and (max-width: 1024px) {
-    #player-container {
-        position: absolute;
-        bottom: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #2a2a2a;
-        border-bottom: none;
-    }
-}
-
-/* Support Banner - Tablet */
-@media screen and (max-width: 1024px) {
-    #support-banner {
-        width: 300px;
-        right: 20px;
-        top: 20px;
-        padding: 12px;
-    }
-    
-    .support-image {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .support-text {
-        font-size: 0.8em;
-    }
-}
-
-/* Music Player - Tablet */
-@media screen and (max-width: 1024px) {
-    #music-player {
-        top: auto;
-        bottom: 20px;
-        left: auto;
-        right: 20px;
-        width: 300px;
+    body {
+        overflow-y: scroll;
+        overflow-x: hidden;
     }
 
-    #player-header {
-        padding: 10px 12px;
-    }
-
-    #player-header span {
-        font-size: 0.65em;
-    }
-
-    .player-controls {
-        gap: 6px;
-    }
-
-    #audio-toggle,
-    #expand-toggle {
-        padding: 6px 9px;
-    }
-
-    #youtube-player {
-        height: 180px;
-    }
-
-    /* Footer si sposta a sinistra del music player */
-    .footer {
-        left: 20px;
-        right: 340px;
-        transform: none;
-        bottom: 20px;
-    }
-}
-
-/* Music Player - Mobile */
-@media screen and (max-width: 768px) {
-    #support-banner {
-        position: relative;
-        width: 100%;
-        right: auto;
-        top: auto;
-        padding: 10px;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    .support-image {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .support-text {
-        font-size: 0.75em;
-        line-height: 1.3;
-    }
-    
-    #music-player {
-        top: auto;
-        bottom: 10px;
-        left: auto;
-        right: 10px;
-        width: 200px;
-    }
-    
-    #player-header {
-        padding: 10px 12px;
-    }
-
-    #player-header span {
-        font-size: 0.65em;
-        letter-spacing: 1.5px;
-    }
-
-    .player-controls {
-        gap: 5px;
-    }
-
-    #audio-toggle,
-    #expand-toggle {
-        padding: 5px 8px;
-    }
-    
-    #volume-slider {
-        width: 60px;
-    }
-
-    #audio-toggle svg,
-    #expand-toggle svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    #youtube-player {
-        height: 160px;
-    }
-
-    /* Footer si sposta a sinistra del music player */
-    .footer {
-        left: 10px;
-        right: 220px;
-        transform: none;
-        bottom: 10px;
-        padding: 10px 12px;
-        width: auto;
-    }
-
-    .footer p {
-        font-size: 0.65em;
-    }
-}
-
-/* Music Player - Mobile Small */
-@media screen and (max-width: 480px) {
-    #music-player {
-        top: auto;
-        bottom: 10px;
-        left: auto;
-        right: 10px;
-        width: 170px;
-    }
-
-    #player-header {
-        padding: 8px 10px;
-    }
-
-    #player-header span {
-        font-size: 0.55em;
-        letter-spacing: 1px;
-    }
-
-    .player-controls {
-        gap: 4px;
-    }
-
-    #audio-toggle,
-    #expand-toggle {
-        padding: 4px 6px;
-    }
-    
-    #volume-slider {
+    #scene-container {
         display: none;
     }
 
-    #audio-toggle svg,
-    #expand-toggle svg {
-        width: 16px;
-        height: 16px;
+    body::before,
+    body::after,
+    .dots-pattern {
+        display: none;
     }
 
-    #youtube-player {
-        height: 130px;
+    #app {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        padding: 20px;
+        gap: 20px;
     }
 
-    /* Footer si adatta per schermi piccoli */
+    /* Search rimane in alto */
+    .search-container {
+        order: 1;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    input {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    /* Support subito dopo search */
+    #support-banner {
+        position: relative;
+        order: 2;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        margin: 0;
+    }
+
+    /* Player absolute alla base */
+    #music-player {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        width: 100%;
+        max-width: none;
+        z-index: 1001;
+    }
+
+    /* Footer subito dopo player */
     .footer {
-        left: 10px;
-        right: 190px;
-        bottom: 10px;
-        padding: 6px 8px;
+        position: relative;
+        order: 4;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        width: 100%;
+        margin: 0;
+        text-align: center;
+    }
+
+    /* Pannello sinistro */
+    .left-panel {
+        order: 5;
+        width: 100%;
+        height: auto;
+        max-height: none;
+    }
+
+    /* Pannello destro */
+    .right-panel {
+        order: 6;
+        width: 100%;
+        height: auto;
+        max-height: none;
+    }
+
+    /* Centro area nascosta su mobile */
+    .center-area {
+        display: none;
+    }
+
+    /* Legal footer rimane in fondo */
+    .legal-footer {
+        margin-top: 40px;
+    }
+
+    /* Suggestions full width */
+    #suggestions {
+        width: calc(100% - 40px);
+        max-width: 300px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #app {
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .left-panel,
+    .right-panel {
+        padding: 20px;
+    }
+
+    input {
+        font-size: 0.85em;
+        padding: 10px 15px;
+    }
+
+    button {
+        font-size: 0.7em;
+        padding: 10px 20px;
     }
 
     .footer p {
-        font-size: 0.55em;
-        line-height: 1.3;
+        font-size: 0.7em;
+    }
+
+    .support-text {
+        font-size: 0.8em;
+    }
+
+    #player-header span {
+        font-size: 0.65em;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #app {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .search-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    input {
+        max-width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    #support-banner {
+        padding: 10px;
+        height: auto;
+    }
+
+    .support-image {
+        width: 30px;
+        height: 30px;
+    }
+
+    .support-text {
+        font-size: 0.75em;
+    }
+
+    #volume-slider {
+        width: 80px;
+    }
+
+    .left-panel,
+    .right-panel {
+        padding: 15px;
+    }
+
+    .left-panel h3,
+    .right-panel h3 {
+        font-size: 0.7em;
     }
 }
