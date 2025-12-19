@@ -566,12 +566,31 @@ button:hover {
     margin-left: 0;
 }
 
+.legal-content h4 {
+    font-size: 0.85em;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    color: #2a2a2a;
+}
+
 .legal-content p {
     margin: 8px 0;
     font-size: 0.7em;
     color: #666;
     line-height: 1.5;
     letter-spacing: 0.3px;
+}
+
+.legal-content a {
+    color: #2a2a2a;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.legal-content a:hover {
+    color: #000;
 }
 
 /* Stili per la ricerca item */
